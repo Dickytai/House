@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>香港租金回報計算器 v8</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  input:focus { outline: 2px solid #2563eb; outline-offset: 1px; }
+  .btn-spinner { width: 36px; height: 36px; flex-shrink: 0; font-size: 1.25rem; }
+  /* 移除number input既上下箭頭 */
+  input[type=number]::-webkit-inner-spin-button, 
+  input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+  }
+  input[type=number] { 
+    -moz-appearance: textfield; 
+  }
+  /* 手機優化 */
+  @media (max-width: 640px) {
+    .btn-spinner { width: 32px; height: 32px; font-size: 1.1rem; }
+    input[type="number"], select { font-size: 1rem; padding: 0.5rem; }
+    .text-lg { font-size: 1rem; }
+    .text-xl { font-size: 1.1rem; }
+    .text-2xl { font-size: 1.25rem; }
+    .text-3xl { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body class="bg-gray-100 min-h-screen pb-12">
+<div class="max-w-md mx-auto bg-white min-h-screen sm:min-h-0 sm:rounded-2xl sm:shadow-lg sm:my-4 sm:pb-8">
+ 
+ <!-- Header -->
+ <div class="bg-blue-600 text-white p-3 sm:p-4 sticky top-0 z-10 sm:rounded-t-2xl">
+   <div class="flex justify-between items-center">
+     <h1 class="text-base sm:text-lg font-bold">租金回報計算器</h1>
+     <button onclick="toggleChart()" class="px-2 py-1 sm:px-3 sm:py-1 rounded-lg bg-blue-700 text-xs sm:text-sm font-medium hover:bg-blue-800">
+      📊 圖表
+     </button>
+   </div>
+ </div>
+
+ <div class="p-2 sm:p-4 space-y-2 sm:space-y-4">
+ 
+  <!-- 樓價 -->
+  <div class="bg-gray-50 p-3 rounded-lg">
+   <label class="block text-sm font-medium text-gray-700 mb-1">樓價 (HK$)</label>
+   <div class="flex items-center gap-2">
+    <button onclick="adjustValue('price', -100000)" class="btn-spinner bg-red-500 text-white rounded-lg font-bold text-xl active:bg-red-600">−</button>
+    <input id="price" type="number" inputmode="decimal" value="5000000" 
+           class="w-full border p-3 rounded-lg text-lg text-center">
+    <button onclick="adjustValue('price', 100000)" class="btn-spinner bg-green-500 text-white rounded-lg font-bold text-xl active:bg-green-600">+</button>
+   </div>
+  </div>
+
+  <!-- 首期 + 按揭資訊 -->
+  <div class="grid grid-cols-2 gap-3">
+   <div class="bg-gray-50 p-3 rounded-lg">
+    <label class="block text-sm font-medium text-gray-700 mb-1">首期 (HK$)</label>
+    <div class="flex items-center gap-2">
+     <button onclick="adjustValue('down', -100000)" class="btn-spinner bg-red-500 text-white rounded-lg font-bold text-xl active:bg-red-600">−</button>
+     <input id="down" type="number" inputmode="decimal" value="1000000" 
+            class="w-full border p-3 rounded-lg text-lg text-center" oninput="syncDownFromInput()">
+     <button onclick="adjustValue('down', 100000)" class="btn-spinner bg-green-500 text-white rounded-lg font-bold text-xl active:bg-green-600">+</button>
+    </div>
+   </div>
+   <div class="bg-gray-50 p-3 rounded-lg">
+    <label class="block text-sm font-medium text-gray-700 mb-1">按揭利率 (%)</label>
+    <div class="flex items-center gap-2">
+     <button onclick="adjustRate(-0.25)" class="btn-spinner bg-red-500 text-white rounded-lg font-bold text-xl active:bg-red-600">−</button>
+     <input id="rate" type="number" inputmode="decimal" value="3" step="0.01" 
+            class="w-full border p-3 rounded-lg text-lg text-center">
+     <button onclick="adjustRate(0.25)" class="btn-spinner bg-green-500 text-white rounded-lg font-bold text-xl active:bg-green-600">+</button>
+    </div>
+   </div>
+  </div>
+
+  <!-- 還款年期 -->
+  <div class="bg-gray-50 p-3 rounded-lg">
+   <label class="block text-sm font-medium text-gray-700 mb-1">還款年期</label>
+   <input id="years" type="number" inputmode="numeric" value="30" 
+          class="w-full border p-3 rounded-lg text-lg">
+  </div>
+
+  <!-- 每月租金 + 租約年期 -->
+  <div class="grid grid-cols-2 gap-3">
+   <div class="bg-gray-50 p-3 rounded-lg">
+    <label class="block text-sm font-medium text-gray-700 mb-1">每月租金 (HK$)</label>
+    <div class="flex items-center gap-2">
+     <button onclick="adjustValue('rent', -500)" class="btn-spinner bg-red-500 text-white rounded-lg font-bold text-xl active:bg-red-600">−</button>
+     <input id="rent" type="number" inputmode="decimal" value="18000" 
+            class="w-full border p-3 rounded-lg text-lg text-center">
+     <button onclick="adjustValue('rent', 500)" class="btn-spinner bg-green-500 text-white rounded-lg font-bold text-xl active:bg-green-600">+</button>
+    </div>
+   </div>
+   <div class="bg-gray-50 p-3 rounded-lg">
+    <label class="block text-sm font-medium text-gray-700 mb-1">租約年期</label>
+    <select id="leaseYears" class="w-full border p-3 rounded-lg text-lg">
+     <option value="1">1 年</option>
+     <option value="2">2 年</option>
+     <option value="3" selected>3 年</option>
+     <option value="4">4 年</option>
+     <option value="5">5 年</option>
+    </select>
+   </div>
+  </div>
+
+  <!-- 差餉 + 地租 -->
+  <div class="grid grid-cols-2 gap-3">
+   <div class="bg-gray-50 p-3 rounded-lg">
+    <label class="block text-sm font-medium text-gray-700 mb-1">年差餉 (HK$)</label>
+    <input id="rates" type="number" inputmode="decimal" placeholder="0=自動5%" 
+           class="w-full border p-3 rounded-lg text-lg">
+   </div>
+   <div class="bg-gray-50 p-3 rounded-lg">
+    <label class="block text-sm font-medium text-gray-700 mb-1">年地租 (HK$)</label>
+    <input id="govrent" type="number" inputmode="decimal" placeholder="0=自動3%" 
+           class="w-full border p-3 rounded-lg text-lg">
+   </div>
+  </div>
+
+  <!-- 管理費 -->
+  <div class="bg-gray-50 p-3 rounded-lg">
+   <label class="block text-sm font-medium text-gray-700 mb-1">月管理費 (HK$)</label>
+   <div class="flex items-center gap-2">
+    <button onclick="adjustValue('mgmt', -100)" class="btn-spinner bg-red-500 text-white rounded-lg font-bold text-xl active:bg-red-600">−</button>
+    <input id="mgmt" type="number" inputmode="decimal" value="1500" 
+           class="w-full border p-3 rounded-lg text-lg text-center">
+    <button onclick="adjustValue('mgmt', 100)" class="btn-spinner bg-green-500 text-white rounded-lg font-bold text-xl active:bg-green-600">+</button>
+   </div>
+  </div>
+
+  <!-- 一次性支出 -->
+  <div class="bg-yellow-50 p-3 rounded-lg">
+   <div class="text-sm font-medium text-yellow-800 mb-2">💰 買樓一次性支出</div>
+   <div class="grid grid-cols-3 gap-2">
+    <div>
+     <label class="block text-xs text-gray-600 mb-1">印花稅 (HK$)</label>
+     <input id="buyStampDuty" type="number" inputmode="decimal" class="w-full border p-2 rounded text-sm text-center bg-white" readonly>
+    </div>
+    <div>
+     <label class="block text-xs text-gray-600 mb-1">律師費 (HK$)</label>
+     <input id="lawyerFee" type="number" inputmode="decimal" value="10000" class="w-full border p-2 rounded text-sm text-center">
+    </div>
+    <div>
+     <label class="block text-xs text-gray-600 mb-1">經紀費 (HK$)</label>
+     <input id="agentFee" type="number" inputmode="decimal" value="0" class="w-full border p-2 rounded text-sm text-center" placeholder="auto 1.5%">
+    </div>
+   </div>
+  </div>
+
+  <button onclick="calc()" 
+          class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:bg-blue-700 transition">
+   重新計算
+  </button>
+
+  <!-- 現金流結果 (移動到按鈕下方) -->
+  <div id="cashFlowResult"></div>
+
+  <!-- 圖表區域 -->
+  <div id="chartSection">
+   <div class="bg-white p-4 rounded-xl shadow mb-4">
+    <div class="text-center text-sm text-gray-500 mb-2">📈 最佳按揭比例分析</div>
+    <div class="text-xs text-gray-400 mb-3">移動Slider或修改首期，圖表會實時更新</div>
+    
+    <!-- 關聯Slider -->
+    <input type="range" id="downRatio" min="10" max="90" value="20" class="w-full mb-2" oninput="syncDownFromSlider()">
+    <div class="flex justify-between text-sm mb-4">
+     <span>首期: <span id="ratioDisplay">20</span>%</span>
+     <span>按揭: <span id="loanDisplay">80</span>%</span>
+    </div>
+    
+    <!-- 數值顯示 -->
+    <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+     <div class="bg-blue-50 p-2 rounded-lg">
+      <div class="text-xs text-gray-500">樓價</div>
+      <div id="chartPrice" class="font-bold text-sm">$5,000,000</div>
+     </div>
+     <div class="bg-green-50 p-2 rounded-lg">
+      <div class="text-xs text-gray-500">首期</div>
+      <div id="chartDown" class="font-bold text-sm text-green-700">$1,000,000</div>
+     </div>
+     <div class="bg-red-50 p-2 rounded-lg">
+      <div class="text-xs text-gray-500">按揭</div>
+      <div id="chartLoan" class="font-bold text-sm text-red-700">$4,000,000</div>
+     </div>
+    </div>
+    
+    <!-- 線形圖 -->
+    <canvas id="analysisChart" height="200"></canvas>
+    
+    <!-- 最優結果 -->
+    <div id="optimalResult" class="mt-4 p-3 bg-yellow-50 rounded-lg text-center hidden">
+     <div class="text-sm text-gray-600">🎯 最佳回報</div>
+     <div class="text-lg font-bold text-yellow-700">首期 <span id="optimalDown">30</span>% = 回報 <span id="optimalReturn">5.2</span>%</div>
+    </div>
+   </div>
+  </div>
+
+  <!-- 結果 -->
+  <div id="result" class="space-y-3"></div>
+ </div>
+</div>
+
+<script>
+let chartInstance = null;
+let showChart = true;
+
+function toggleChart() {
+  showChart = !showChart;
+  document.getElementById('chartSection').classList.toggle('hidden', !showChart);
+  if (showChart) {
+    initChart();
+    updateChart();
+  }
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+// Slider -> 首期輸入 同步
+function syncDownFromSlider() {
+  let price = parseFloat(document.getElementById('price').value) || 0;
+  let ratio = parseFloat(document.getElementById('downRatio').value) || 20;
+  let down = price * (ratio / 100);
+  document.getElementById('down').value = Math.round(down);
+  updateChart();
+  calc();
+}
+
+// 首期輸入 -> Slider 同步
+function syncDownFromInput() {
+  let price = parseFloat(document.getElementById('price').value) || 0;
+  let down = parseFloat(document.getElementById('down').value) || 0;
+  if (price > 0) {
+    let ratio = (down / price) * 100;
+    ratio = Math.max(10, Math.min(90, ratio));
+    document.getElementById('downRatio').value = ratio.toFixed(0);
+    document.getElementById('ratioDisplay').textContent = ratio.toFixed(0);
+    document.getElementById('loanDisplay').textContent = (100 - ratio).toFixed(0);
+  }
+  if (showChart) updateChart();
+  calc();
+}
+
+function adjustRate(delta) {
+  const rateInput = document.getElementById('rate');
+  let rate = parseFloat(rateInput.value) || 0;
+  rate = Math.round((rate + delta) * 100) / 100;
+  if (rate < 0) rate = 0;
+  rateInput.value = rate;
+  calc();
+  if (showChart) updateChart();
+}
+
+function adjustValue(id, delta) {
+  const input = document.getElementById(id);
+  let value = parseFloat(input.value) || 0;
+  value = value + delta;
+  if (value < 0) value = 0;
+  input.value = value;
+  if (id === 'down') {
+    syncDownFromInput();
+  }
+  calc();
+  if (showChart) updateChart();
+}
+
+// Auto-calculate on load
+window.addEventListener('DOMContentLoaded', calc);
+
+// Auto-calculate on input change
+document.querySelectorAll('input').forEach(input => {
+  input.addEventListener('input', function() {
+    calc();
+    if (showChart && this.id !== 'down') updateChart();
+  });
+});
+document.querySelectorAll('select').forEach(select => {
+  select.addEventListener('change', function() {
+    calc();
+    if (showChart) updateChart();
+  });
+});
+
+function formatMoney(num) {
+  return '$' + Math.round(num).toLocaleString();
+}
+
+function calc() {
+ let price = parseFloat(document.getElementById('price').value) || 0;
+ let down = parseFloat(document.getElementById('down').value) || 0;
+ let loan = price - down;
+
+ // 計算買樓印花稅 (2026年2月26日起階梯)
+ function calcBuyStampDuty(p) {
+   if (p <= 4000000) return 100;
+   if (p <= 4323780) return 100 + (p - 4000000) * 0.20;
+   if (p <= 4500000) return p * 0.015;
+   if (p <= 4935480) return 67500 + (p - 4500000) * 0.10;
+   if (p <= 6000000) return p * 0.0225;
+   if (p <= 6642860) return 135000 + (p - 6000000) * 0.10;
+   if (p <= 9000000) return p * 0.03;
+   if (p <= 10080000) return 270000 + (p - 9000000) * 0.10;
+   if (p <= 20000000) return p * 0.0375;
+   if (p <= 21739120) return 750000 + (p - 20000000) * 0.10;
+   if (p <= 100000000) return p * 0.0425;
+   if (p <= 109574470) return 4250000 + (p - 100000000) * 0.30;
+   return p * 0.065;
+ }
+ 
+ let buyStampDuty = calcBuyStampDuty(price);
+ let lawyerFee = parseFloat(document.getElementById('lawyerFee').value) || 10000;
+ let agentFeeInput = parseFloat(document.getElementById('agentFee').value);
+ let agentFee = !isNaN(agentFeeInput) && agentFeeInput > 0 ? agentFeeInput : price * 0.015;
+ 
+ // 更新印花稅和經紀費顯示
+ document.getElementById('buyStampDuty').value = Math.round(buyStampDuty);
+ if (isNaN(agentFeeInput) || agentFeeInput === 0) {
+   document.getElementById('agentFee').value = Math.round(agentFee);
+ }
+
+ // 一次性支出總額
+ let totalOneTime = buyStampDuty + lawyerFee + agentFee;
+
+ let r = parseFloat(document.getElementById('rate').value)/100/12 || 0;
+ let n = parseFloat(document.getElementById('years').value)*12 || 0;
+ let pmt = (r === 0 || n === 0) ? 0 : loan * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1);
+ let monthlyMort = pmt;
+ let annualMort = pmt * 12;
+
+ let monthlyRent = parseFloat(document.getElementById('rent').value) || 0;
+ let annualRent = monthlyRent * 12;
+ let leaseYears = parseFloat(document.getElementById('leaseYears').value) || 1;
+ 
+ let stampDutyRate = leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01);
+ let totalRent = annualRent * leaseYears;
+ let stampDuty = totalRent * stampDutyRate;
+ let annualStampDuty = stampDuty / leaseYears;
+
+ let inputRates = parseFloat(document.getElementById('rates').value) || 0;
+ let annualRates = inputRates > 0 ? inputRates : annualRent * 0.05;
+ let monthlyRates = annualRates / 12;
+
+ let inputGov = parseFloat(document.getElementById('govrent').value) || 0;
+ let annualGovRent = inputGov > 0 ? inputGov : annualRent * 0.03;
+ let monthlyGovRent = annualGovRent / 12;
+
+ let monthlyMgmt = parseFloat(document.getElementById('mgmt').value) || 0;
+ let annualMgmt = monthlyMgmt * 12;
+
+ let assessable = annualRent - annualRates;
+ let nav = assessable * 0.8;
+ let tax = Math.max(nav * 0.15, 0);
+ let monthlyTax = tax / 12;
+
+ let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - annualMort - annualStampDuty;
+ let netMonthlyCash = netAnnualCash / 12;
+ 
+ // 計算回本期
+ let paybackMonths = netMonthlyCash > 0 ? Math.ceil(totalOneTime / netMonthlyCash) : 999;
+ let paybackYears = paybackMonths < 999 ? (paybackMonths / 12).toFixed(1) : '∞';
+ 
+ let cashReturn = down > 0 ? (netAnnualCash / down * 100).toFixed(2) : 0;
+ let grossYield = price > 0 ? (annualRent / price * 100).toFixed(2) : 0;
+
+ let isAutoR = inputRates <= 0 ? "（自動）" : "";
+ let isAutoG = inputGov <= 0 ? "（自動）" : "";
+
+ let cashFlowBg = netAnnualCash >= 0 ? 'bg-green-100' : 'bg-red-100';
+ let cashFlowText = netAnnualCash >= 0 ? 'text-green-700' : 'text-red-700';
+ let cashFlowBtn = netAnnualCash >= 0 ? 'bg-green-600' : 'bg-red-600';
+
+ document.getElementById('cashFlowResult').innerHTML = `
+ <div class="${cashFlowBg} p-4 rounded-xl text-center">
+   <div class="grid grid-cols-2 gap-3 text-center mb-3">
+     <div>
+       <div class="text-gray-600 text-sm">年淨現金流</div>
+       <div class="text-xl font-bold ${cashFlowText}">${formatMoney(Math.round(netAnnualCash))}</div>
+     </div>
+     <div>
+       <div class="text-gray-600 text-sm">月淨現金流</div>
+       <div class="text-xl font-bold ${cashFlowText}">${formatMoney(Math.round(netMonthlyCash))}</div>
+     </div>
+   </div>
+   <div class="text-center mb-3">
+     <div class="${cashFlowBtn} text-white py-2 px-4 rounded-lg inline-block font-bold">
+      現金回報率：${cashReturn}%
+     </div>
+     <div class="text-gray-500 text-sm mt-2">毛租金回報率：${grossYield}%</div>
+   </div>
+   <!-- 回本期 -->
+   <div class="pt-3 border-t ${netMonthlyCash > 0 ? 'bg-blue-50' : 'bg-red-50'} rounded-lg">
+     <div class="text-sm text-gray-600">🎯 回本期</div>
+     <div class="text-2xl font-bold ${netMonthlyCash > 0 ? 'text-blue-700' : 'text-red-700'}">
+      ${paybackMonths < 999 ? paybackMonths + ' 個月' : '無法回本'}
+     </div>
+     <div class="text-xs text-gray-500">(${paybackYears} 年)</div>
+   </div>
+ </div>
+ `;
+
+ document.getElementById('result').innerHTML = `
+ <div class="bg-gray-50 p-4 rounded-xl">
+ <div class="flex justify-between items-center border-b pb-2 mb-3">
+   <span class="font-bold text-gray-700">樓價</span>
+   <span class="text-lg">${formatMoney(price)}</span>
+ </div>
+ <div class="flex justify-between items-center border-b pb-2 mb-3">
+   <span class="text-gray-600">首期</span>
+   <span>${formatMoney(down)}</span>
+ </div>
+ 
+ <!-- 一次性支出 -->
+ <div class="bg-yellow-50 p-3 rounded-lg mb-3 text-sm">
+   <div class="font-semibold text-yellow-800 mb-2">🏠 買樓一次性支出</div>
+   <div class="grid grid-cols-2 gap-2 text-center mb-2">
+    <div class="bg-yellow-100 p-2 rounded-lg">
+     <div class="text-gray-500 text-xs">印花稅</div>
+     <div class="font-bold text-yellow-700">${formatMoney(Math.round(buyStampDuty))}</div>
+    </div>
+    <div class="bg-yellow-100 p-2 rounded-lg">
+     <div class="text-gray-500 text-xs">律師費</div>
+     <div class="font-bold text-yellow-700">${formatMoney(lawyerFee)}</div>
+    </div>
+   </div>
+   <div class="grid grid-cols-2 gap-2 text-center mb-2">
+    <div class="bg-yellow-100 p-2 rounded-lg">
+     <div class="text-gray-500 text-xs">經紀費</div>
+     <div class="font-bold text-yellow-700">${formatMoney(Math.round(agentFee))}</div>
+    </div>
+    <div class="bg-yellow-100 p-2 rounded-lg">
+     <div class="text-gray-500 text-xs">租客釐印費</div>
+     <div class="font-bold text-yellow-700">${formatMoney(Math.round(stampDuty))}</div>
+    </div>
+   </div>
+   <div class="text-center pt-2 border-t border-yellow-200">
+    <div class="text-xs text-gray-500">總額</div>
+    <div class="font-bold text-lg text-yellow-800">${formatMoney(Math.round(totalOneTime + stampDuty))}</div>
+   </div>
+ </div>
+ 
+ <div class="bg-white p-3 rounded-lg mb-3 text-sm">
+   <div class="font-semibold text-gray-700 mb-2">💰 租金收入</div>
+   <div class="grid grid-cols-2 gap-2 text-center">
+     <div class="bg-blue-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">年</div>
+       <div class="font-bold text-lg">${formatMoney(annualRent)}</div>
+     </div>
+     <div class="bg-blue-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">月</div>
+       <div class="font-bold text-lg">${formatMoney(monthlyRent)}</div>
+     </div>
+   </div>
+ </div>
+ 
+ <div class="bg-white p-3 rounded-lg mb-3 text-sm">
+   <div class="font-semibold text-gray-700 mb-2">🏛️ 稅務計算</div>
+   <div class="grid grid-cols-2 gap-2 text-center mb-2">
+     <div class="bg-orange-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">年差餉</div>
+       <div class="font-bold">${formatMoney(Math.round(annualRates))}${isAutoR}</div>
+     </div>
+     <div class="bg-orange-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">月差餉</div>
+       <div class="font-bold">${formatMoney(Math.round(monthlyRates))}</div>
+     </div>
+   </div>
+   <div class="grid grid-cols-2 gap-2 text-center mb-2">
+     <div class="bg-red-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">年物业税</div>
+       <div class="font-bold text-red-600">${formatMoney(Math.round(tax))}</div>
+     </div>
+     <div class="bg-red-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">月物业税</div>
+       <div class="font-bold text-red-600">${formatMoney(Math.round(monthlyTax))}</div>
+     </div>
+   </div>
+ </div>
+ 
+ <div class="bg-white p-3 rounded-lg mb-3 text-sm">
+   <div class="font-semibold text-gray-700 mb-2">📋 支出</div>
+   <div class="grid grid-cols-2 gap-2 text-center mb-2">
+     <div class="bg-gray-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">年地租</div>
+       <div class="font-bold">${formatMoney(Math.round(annualGovRent))}${isAutoG}</div>
+     </div>
+     <div class="bg-gray-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">月地租</div>
+       <div class="font-bold">${formatMoney(Math.round(monthlyGovRent))}</div>
+     </div>
+   </div>
+   <div class="grid grid-cols-2 gap-2 text-center mb-2">
+     <div class="bg-gray-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">年管理費</div>
+       <div class="font-bold">${formatMoney(Math.round(annualMgmt))}</div>
+     </div>
+     <div class="bg-gray-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">月管理費</div>
+       <div class="font-bold">${formatMoney(Math.round(monthlyMgmt))}</div>
+     </div>
+   </div>
+   <div class="grid grid-cols-2 gap-2 text-center mb-2">
+     <div class="bg-gray-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">年供款</div>
+       <div class="font-bold">${formatMoney(Math.round(annualMort))}</div>
+     </div>
+     <div class="bg-gray-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">月供款</div>
+       <div class="font-bold">${formatMoney(Math.round(monthlyMort))}</div>
+     </div>
+   </div>
+ </div>
+ 
+ </div>
+ `;
+}
+
+function initChart() {
+  const ctx = document.getElementById('analysisChart').getContext('2d');
+  
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: '現金回報率 (%)',
+        data: [],
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: 'rgba(59, 130, 246, 1)'
+      }, {
+        label: '月淨現金流 (HK$)',
+        data: [],
+        borderColor: 'rgba(34, 197, 94, 1)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+        yAxisID: 'y1'
+      }]
+    },
+    options: {
+      responsive: true,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: '首期比例 (%)'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: '回報率 (%)'
+          },
+          beginAtZero: true
+        },
+        y1: {
+          title: {
+            display: true,
+            text: '月現金流 (HK$)'
+          },
+          beginAtZero: true,
+          position: 'right',
+          grid: {
+            drawOnChartArea: false
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              if (context.datasetIndex === 0) {
+                return '回報率: ' + context.raw.toFixed(2) + '%';
+              } else {
+                return '月現金流: $' + Math.round(context.raw).toLocaleString();
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateChart() {
+  let price = parseFloat(document.getElementById('price').value) || 0;
+  let currentRatio = parseFloat(document.getElementById('downRatio').value) || 20;
+  
+  // 同步顯示
+  document.getElementById('ratioDisplay').textContent = currentRatio;
+  document.getElementById('loanDisplay').textContent = 100 - currentRatio;
+  
+  let currentDown = price * (currentRatio / 100);
+  let currentLoan = price * (currentRatio / 100);
+  
+  document.getElementById('chartPrice').textContent = formatMoney(price);
+  document.getElementById('chartDown').textContent = formatMoney(currentDown);
+  document.getElementById('chartLoan').textContent = formatMoney(price - currentDown);
+  
+  // 計算不同比例的數據
+  let ratios = [];
+  let returns = [];
+  let cashflows = [];
+  let maxReturn = -999999;
+  let optimalRatio = 20;
+  let optimalReturn = 0;
+  
+  for (let r = 10; r <= 90; r += 5) {
+    ratios.push(r + '%');
+    
+    let down = price * (r / 100);
+    let loan = price * ((100 - r) / 100);
+    
+    let rate = parseFloat(document.getElementById('rate').value)/100/12 || 0;
+    let n = parseFloat(document.getElementById('years').value)*12 || 0;
+    let pmt = (rate === 0 || n === 0) ? 0 : loan * rate * Math.pow(1+rate,n) / (Math.pow(1+rate,n)-1);
+    
+    let monthlyRent = parseFloat(document.getElementById('rent').value) || 0;
+    let annualRent = monthlyRent * 12;
+    let annualRates = annualRent * 0.05;
+    let annualGovRent = annualRent * 0.03;
+    let monthlyMgmt = parseFloat(document.getElementById('mgmt').value) || 0;
+    let annualMgmt = monthlyMgmt * 12;
+    let assessable = annualRent - annualRates;
+    let nav = assessable * 0.8;
+    let tax = Math.max(nav * 0.15, 0);
+    let leaseYears = parseFloat(document.getElementById('leaseYears').value) || 1;
+    let stampDutyRate = leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01);
+    let annualStampDuty = (annualRent * leaseYears * stampDutyRate) / leaseYears;
+    
+    let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - (pmt * 12) - annualStampDuty;
+    let netMonthlyCash = netAnnualCash / 12;
+    let cashReturn = down > 0 ? (netAnnualCash / down * 100) : 0;
+    
+    returns.push(cashReturn);
+    cashflows.push(netMonthlyCash);
+    
+    if (cashReturn > maxReturn) {
+      maxReturn = cashReturn;
+      optimalRatio = r;
+      optimalReturn = cashReturn;
+    }
+  }
+  
+  if (chartInstance) {
+    chartInstance.data.labels = ratios;
+    chartInstance.data.datasets[0].data = returns;
+    chartInstance.data.datasets[1].data = cashflows;
+    chartInstance.update();
+  }
+  
+  // 顯示最優結果
+  document.getElementById('optimalResult').classList.remove('hidden');
+  document.getElementById('optimalDown').textContent = optimalRatio;
+  document.getElementById('optimalReturn').textContent = optimalReturn.toFixed(2);
+}
+</script>
+</body>
+</html>
