@@ -99,12 +99,13 @@
    </div>
    <div class="bg-gray-50 p-3 rounded-lg">
     <label class="block text-sm font-medium text-gray-700 mb-1">租約年期</label>
-    <select id="leaseYears" class="w-full border p-3 rounded-lg text-lg">
+    <select id="leaseYears" class="w-full border p-3 rounded-lg text-lg" onchange="updateLeaseType()">
      <option value="1">1 年</option>
      <option value="2">2 年</option>
      <option value="3" selected>3 年</option>
      <option value="4">4 年</option>
      <option value="5">5 年</option>
+     <option value="0">自住</option>
     </select>
    </div>
   </div>
@@ -334,11 +335,13 @@ function calc() {
  let monthlyRent = parseFloat(document.getElementById('rent').value) || 0;
  let annualRent = monthlyRent * 12;
  let leaseYears = parseFloat(document.getElementById('leaseYears').value) || 1;
+ let isSelfOccupied = leaseYears === 0; // 自住
  
- let stampDutyRate = leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01);
+ // 釐印費（自住 = 0）
+ let stampDutyRate = isSelfOccupied ? 0 : (leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01));
  let totalRent = annualRent * leaseYears;
- let stampDuty = totalRent * stampDutyRate;
- let annualStampDuty = stampDuty / leaseYears;
+ let stampDuty = isSelfOccupied ? 0 : (totalRent * stampDutyRate);
+ let annualStampDuty = isSelfOccupied ? 0 : (stampDuty / leaseYears);
 
  let inputRates = parseFloat(document.getElementById('rates').value) || 0;
  let annualRates = inputRates > 0 ? inputRates : annualRent * 0.05;
@@ -353,7 +356,7 @@ function calc() {
 
  let assessable = annualRent - annualRates;
  let nav = assessable * 0.8;
- let tax = Math.max(nav * 0.15, 0);
+ let tax = isSelfOccupied ? 0 : Math.max(nav * 0.15, 0);
  let monthlyTax = tax / 12;
 
  let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - annualMort - annualStampDuty;
