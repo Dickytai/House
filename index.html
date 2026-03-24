@@ -467,16 +467,6 @@ function calc() {
  <div class="bg-white p-3 rounded-lg mb-3 text-sm">
    <div class="font-semibold text-gray-700 mb-2">🏛️ 稅務計算</div>
    <div class="grid grid-cols-2 gap-2 text-center mb-2">
-     <div class="bg-orange-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">年差餉</div>
-       <div class="font-bold">${formatMoney(Math.round(annualRates))}${isAutoR}</div>
-     </div>
-     <div class="bg-orange-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">月差餉</div>
-       <div class="font-bold">${formatMoney(Math.round(monthlyRates))}</div>
-     </div>
-   </div>
-   <div class="grid grid-cols-2 gap-2 text-center mb-2">
      <div class="bg-red-50 p-2 rounded-lg">
        <div class="text-gray-500 text-xs">年物业税</div>
        <div class="font-bold text-red-600">${formatMoney(Math.round(tax))}</div>
@@ -498,6 +488,16 @@ function calc() {
      <div class="bg-gray-50 p-2 rounded-lg">
        <div class="text-gray-500 text-xs">月地租</div>
        <div class="font-bold">${formatMoney(Math.round(monthlyGovRent))}</div>
+     </div>
+   </div>
+   <div class="grid grid-cols-2 gap-2 text-center mb-2">
+     <div class="bg-gray-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">年差餉</div>
+       <div class="font-bold">${formatMoney(Math.round(annualRates))}${isAutoR}</div>
+     </div>
+     <div class="bg-gray-50 p-2 rounded-lg">
+       <div class="text-gray-500 text-xs">月差餉</div>
+       <div class="font-bold">${formatMoney(Math.round(monthlyRates))}</div>
      </div>
    </div>
    <div class="grid grid-cols-2 gap-2 text-center mb-2">
