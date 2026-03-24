@@ -290,6 +290,11 @@ function formatMoney(num) {
   return '$' + Math.round(num).toLocaleString();
 }
 
+function updateLeaseType() {
+  // 切換自住模式：UI 已由 calc() 處理，此處預留擴展
+  calc();
+}
+
 function calc() {
  let price = parseFloat(document.getElementById('price').value) || 0;
  let down = parseFloat(document.getElementById('down').value) || 0;
