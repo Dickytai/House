@@ -339,7 +339,7 @@ function calc() {
 
  let monthlyRent = parseFloat(document.getElementById('rent').value) || 0;
  let annualRent = monthlyRent * 12;
- let leaseYears = parseFloat(document.getElementById('leaseYears').value) || 1;
+ let leaseYears = parseFloat(document.getElementById('leaseYears').value) ?? 1;
  let isSelfOccupied = leaseYears === 0; // 自住
  
  // 釐印費（自住 = 0）
@@ -648,10 +648,11 @@ function updateChart() {
     let annualMgmt = monthlyMgmt * 12;
     let assessable = annualRent - annualRates;
     let nav = assessable * 0.8;
-    let tax = Math.max(nav * 0.15, 0);
-    let leaseYears = parseFloat(document.getElementById('leaseYears').value) || 1;
-    let stampDutyRate = leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01);
-    let annualStampDuty = (annualRent * leaseYears * stampDutyRate) / leaseYears;
+    let leaseYears = parseFloat(document.getElementById('leaseYears').value) ?? 1;
+    let isSelfOccupied = leaseYears === 0;
+    let tax = isSelfOccupied ? 0 : Math.max(nav * 0.15, 0);
+    let stampDutyRate = isSelfOccupied ? 0 : (leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01));
+    let annualStampDuty = isSelfOccupied ? 0 : (annualRent * leaseYears * stampDutyRate) / leaseYears;
     
     let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - (pmt * 12) - annualStampDuty;
     let netMonthlyCash = netAnnualCash / 12;
