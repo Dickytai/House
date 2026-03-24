@@ -364,7 +364,7 @@ function calc() {
  let tax = isSelfOccupied ? 0 : Math.max(nav * 0.15, 0);
  let monthlyTax = tax / 12;
 
- let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - annualMort - annualStampDuty;
+ let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - annualMort;
  let netMonthlyCash = netAnnualCash / 12;
  
  // 計算回本期
@@ -654,7 +654,7 @@ function updateChart() {
     let stampDutyRate = isSelfOccupied ? 0 : (leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01));
     let annualStampDuty = isSelfOccupied ? 0 : (annualRent * leaseYears * stampDutyRate) / leaseYears;
     
-    let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - (pmt * 12) - annualStampDuty;
+    let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - (pmt * 12);
     let netMonthlyCash = netAnnualCash / 12;
     let cashReturn = down > 0 ? (netAnnualCash / down * 100) : 0;
     
