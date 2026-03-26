@@ -291,7 +291,24 @@ function formatMoney(num) {
 }
 
 function updateLeaseType() {
-  // 切換自住模式：UI 已由 calc() 處理，此處預留擴展
+  let leaseYears = document.getElementById('leaseYears').value;
+  let rentInput = document.getElementById('rent');
+  let isSelfLive = (leaseYears === '0');
+  
+  if (isSelfLive) {
+    rentInput.value = 0;
+    rentInput.disabled = true;
+    rentInput.style.opacity = '0.5';
+    // 禁用 +/- 按鈕
+    rentInput.previousElementSibling.disabled = true;
+    rentInput.nextElementSibling.disabled = true;
+  } else {
+    rentInput.disabled = false;
+    rentInput.style.opacity = '1';
+    rentInput.previousElementSibling.disabled = false;
+    rentInput.nextElementSibling.disabled = false;
+  }
+  
   calc();
 }
 
