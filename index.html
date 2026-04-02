@@ -3,225 +3,813 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>香港租金回報計算器 v8</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>香港租金回報計算器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  * { -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  input:focus { outline: 2px solid #2563eb; outline-offset: 1px; }
-  .btn-spinner { width: 36px; height: 36px; flex-shrink: 0; font-size: 1.25rem; }
-  /* 移除number input既上下箭頭 */
-  input[type=number]::-webkit-inner-spin-button, 
-  input[type=number]::-webkit-outer-spin-button { 
-    -webkit-appearance: none; 
-    margin: 0; 
+  :root {
+    --bg-primary: #0a0a0b;
+    --bg-secondary: #111113;
+    --bg-card: #16161a;
+    --bg-card-hover: #1c1c21;
+    --bg-input: #0f0f11;
+    --border: #2a2a30;
+    --border-light: #3a3a42;
+    --gold: #c9a962;
+    --gold-light: #e4c87a;
+    --gold-dim: #8a7444;
+    --gold-glow: rgba(201, 169, 98, 0.15);
+    --text-primary: #f5f5f3;
+    --text-secondary: #9a9a9e;
+    --text-dim: #5a5a5e;
+    --green: #4ade80;
+    --green-dim: rgba(74, 222, 128, 0.15);
+    --red: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.15);
+    --shadow-gold: 0 4px 24px rgba(201, 169, 98, 0.12);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
-  input[type=number] { 
-    -moz-appearance: textfield; 
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
-  /* 手機優化 */
-  @media (max-width: 640px) {
-    .btn-spinner { width: 32px; height: 32px; font-size: 1.1rem; }
-    input[type="number"], select { font-size: 1rem; padding: 0.5rem; }
-    .text-lg { font-size: 1rem; }
-    .text-xl { font-size: 1.1rem; }
-    .text-2xl { font-size: 1.25rem; }
-    .text-3xl { font-size: 1.5rem; }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 1000;
   }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 16px 48px;
+  }
+
+  /* Header */
+  .header {
+    padding: 32px 0 24px;
+    text-align: center;
+    position: relative;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dim) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* Toggle Button */
+  .toggle-chart-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 20px;
+    margin: 24px 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .toggle-chart-btn:hover {
+    border-color: var(--gold-dim);
+    color: var(--gold);
+  }
+  .toggle-chart-btn svg {
+    transition: transform 0.3s ease;
+  }
+  .toggle-chart-btn.active svg {
+    transform: rotate(180deg);
+  }
+
+  /* Card */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .card:hover {
+    border-color: var(--border-light);
+  }
+  .card.gold:hover {
+    border-color: var(--gold-dim);
+    box-shadow: var(--shadow-gold);
+  }
+
+  /* Section Title */
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::before {
+    content: '';
+    width: 20px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold-dim), transparent);
+  }
+
+  /* Input Group */
+  .input-group {
+    margin-bottom: 16px;
+  }
+  .input-group:last-child {
+    margin-bottom: 0;
+  }
+  .input-label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+
+  /* Number Input */
+  .number-input-wrapper {
+    display: flex;
+    align-items: stretch;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+  }
+  .number-input-wrapper:focus-within {
+    border-color: var(--gold-dim);
+  }
+  .number-btn {
+    width: 48px;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 20px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .number-btn:hover {
+    background: var(--bg-card-hover);
+    color: var(--gold);
+  }
+  .number-btn:active {
+    background: var(--gold-glow);
+  }
+  .number-btn.minus { border-right: 1px solid var(--border); }
+  .number-btn.plus { border-left: 1px solid var(--border); }
+  .number-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding: 14px 8px;
+    min-width: 0;
+  }
+  .number-input:focus {
+    outline: none;
+  }
+  /* Remove number arrows */
+  .number-input::-webkit-inner-spin-button,
+  .number-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .number-input { -moz-appearance: textfield; }
+
+  /* Select */
+  .select-wrapper {
+    position: relative;
+  }
+  .select-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 40px 14px 14px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    color: var(--text-primary);
+    cursor: pointer;
+    appearance: none;
+    transition: border-color 0.2s ease;
+  }
+  .select-input:focus {
+    outline: none;
+    border-color: var(--gold-dim);
+  }
+  .select-arrow {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--text-dim);
+  }
+
+  /* Grid layouts */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Calculate Button */
+  .calc-btn {
+    width: 100%;
+    padding: 18px 24px;
+    margin: 24px 0;
+    background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold) 100%);
+    border: none;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #0a0a0b;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .calc-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+  }
+  .calc-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(201, 169, 98, 0.3);
+  }
+  .calc-btn:hover::before {
+    left: 100%;
+  }
+  .calc-btn:active {
+    transform: translateY(0);
+  }
+
+  /* Results */
+  .result-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(201, 169, 98, 0.05) 100%);
+    border: 1px solid var(--gold-dim);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+    animation: fadeIn 0.5s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .result-title {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .result-main {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--gold);
+  }
+  .result-main.positive { color: var(--green); }
+  .result-main.negative { color: var(--red); }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .result-item {
+    background: var(--bg-primary);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .result-item-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .result-item-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  /* Cash Return Badge */
+  .cash-return-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 16px;
+  }
+  .cash-return-badge.positive {
+    background: var(--green-dim);
+    color: var(--green);
+  }
+  .cash-return-badge.negative {
+    background: var(--red-dim);
+    color: var(--red);
+  }
+
+  /* Payback Period */
+  .payback-box {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  .payback-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .payback-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 600;
+  }
+  .payback-value.good { color: var(--gold-light); }
+  .payback-value.bad { color: var(--red); }
+  .payback-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* Detail Results */
+  .detail-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .detail-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+  .detail-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .detail-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+  .detail-value.highlight {
+    color: var(--gold);
+  }
+  .detail-value.green { color: var(--green); }
+  .detail-value.red { color: var(--red); }
+
+  /* One-time expenses */
+  .expense-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .expense-item {
+    background: var(--bg-primary);
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+  }
+  .expense-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .expense-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--gold);
+  }
+
+  /* Chart Section */
+  .chart-section {
+    margin: 24px 0;
+    display: none;
+  }
+  .chart-section.visible {
+    display: block;
+    animation: slideUp 0.4s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chart-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .chart-header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .chart-subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* Slider */
+  .slider-container {
+    margin: 20px 0;
+  }
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .slider-value {
+    color: var(--gold) !important;
+    font-weight: 500;
+  }
+  .slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-input);
+    outline: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(201, 169, 98, 0.4);
+    transition: transform 0.2s ease;
+  }
+  .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+  }
+
+  /* Optimal Result */
+  .optimal-box {
+    margin-top: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(201, 169, 98, 0.1) 0%, transparent 100%);
+    border: 1px solid var(--gold-dim);
+    border-radius: 12px;
+    text-align: center;
+  }
+  .optimal-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .optimal-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--gold);
+  }
+
+  /* Canvas */
+  #analysisChart {
+    max-height: 200px;
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 480px) {
+    .container { padding: 0 12px 32px; }
+    .header { padding: 24px 0 20px; }
+    .logo { font-size: 24px; }
+    .card { padding: 16px; border-radius: 12px; }
+    .result-main { font-size: 32px; }
+    .number-btn { width: 44px; }
+    .number-input { font-size: 16px; padding: 12px 6px; }
+    .expense-grid { gap: 8px; }
+    .expense-item { padding: 10px 6px; }
+  }
+
+  /* Hide elements */
+  .hidden { display: none !important; }
 </style>
 </head>
-<body class="bg-gray-100 min-h-screen pb-12">
-<div class="max-w-md mx-auto bg-white min-h-screen sm:min-h-0 sm:rounded-2xl sm:shadow-lg sm:my-4 sm:pb-8">
- 
- <!-- Header -->
- <div class="bg-blue-600 text-white p-3 sm:p-4 sticky top-0 z-10 sm:rounded-t-2xl">
-   <div class="flex justify-between items-center">
-     <h1 class="text-base sm:text-lg font-bold">租金回報計算器</h1>
-     <button onclick="toggleChart()" class="px-2 py-1 sm:px-3 sm:py-1 rounded-lg bg-blue-700 text-xs sm:text-sm font-medium hover:bg-blue-800">
-      📊 圖表
-     </button>
-   </div>
- </div>
+<body>
+<div class="container">
 
- <div class="p-2 sm:p-4 space-y-2 sm:space-y-4">
- 
-  <!-- 樓價 -->
-  <div class="bg-gray-50 p-3 rounded-lg">
-   <label class="block text-sm font-medium text-gray-700 mb-1">樓價 (HK$)</label>
-   <div class="flex items-center gap-2">
-    <button onclick="adjustValue('price', -100000)" class="btn-spinner bg-red-500 text-white rounded-lg font-bold text-xl active:bg-red-600">−</button>
-    <input id="price" type="number" inputmode="decimal" value="5000000" 
-           class="w-full border p-3 rounded-lg text-lg text-center">
-    <button onclick="adjustValue('price', 100000)" class="btn-spinner bg-green-500 text-white rounded-lg font-bold text-xl active:bg-green-600">+</button>
-   </div>
-  </div>
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">租金回報計算器</div>
+    <div class="subtitle">Hong Kong Property Investment</div>
+  </header>
 
-  <!-- 首期 + 按揭資訊 -->
-  <div class="grid grid-cols-2 gap-3">
-   <div class="bg-gray-50 p-3 rounded-lg">
-    <label class="block text-sm font-medium text-gray-700 mb-1">首期 (HK$)</label>
-    <div class="flex items-center gap-2">
-     <button onclick="adjustValue('down', -100000)" class="btn-spinner bg-red-500 text-white rounded-lg font-bold text-xl active:bg-red-600">−</button>
-     <input id="down" type="number" inputmode="decimal" value="1000000" 
-            class="w-full border p-3 rounded-lg text-lg text-center" oninput="syncDownFromInput()">
-     <button onclick="adjustValue('down', 100000)" class="btn-spinner bg-green-500 text-white rounded-lg font-bold text-xl active:bg-green-600">+</button>
-    </div>
-   </div>
-   <div class="bg-gray-50 p-3 rounded-lg">
-    <label class="block text-sm font-medium text-gray-700 mb-1">按揭利率 (%)</label>
-    <div class="flex items-center gap-2">
-     <button onclick="adjustRate(-0.25)" class="btn-spinner bg-red-500 text-white rounded-lg font-bold text-xl active:bg-red-600">−</button>
-     <input id="rate" type="number" inputmode="decimal" value="3" step="0.01" 
-            class="w-full border p-3 rounded-lg text-lg text-center">
-     <button onclick="adjustRate(0.25)" class="btn-spinner bg-green-500 text-white rounded-lg font-bold text-xl active:bg-green-600">+</button>
-    </div>
-   </div>
-  </div>
-
-  <!-- 還款年期 -->
-  <div class="bg-gray-50 p-3 rounded-lg">
-   <label class="block text-sm font-medium text-gray-700 mb-1">還款年期</label>
-   <input id="years" type="number" inputmode="numeric" value="30" 
-          class="w-full border p-3 rounded-lg text-lg">
-  </div>
-
-  <!-- 每月租金 + 租約年期 -->
-  <div class="grid grid-cols-2 gap-3">
-   <div class="bg-gray-50 p-3 rounded-lg">
-    <label class="block text-sm font-medium text-gray-700 mb-1">每月租金 (HK$)</label>
-    <div class="flex items-center gap-2">
-     <button onclick="adjustValue('rent', -500)" class="btn-spinner bg-red-500 text-white rounded-lg font-bold text-xl active:bg-red-600">−</button>
-     <input id="rent" type="number" inputmode="decimal" value="18000" 
-            class="w-full border p-3 rounded-lg text-lg text-center">
-     <button onclick="adjustValue('rent', 500)" class="btn-spinner bg-green-500 text-white rounded-lg font-bold text-xl active:bg-green-600">+</button>
-    </div>
-   </div>
-   <div class="bg-gray-50 p-3 rounded-lg">
-    <label class="block text-sm font-medium text-gray-700 mb-1">租約年期</label>
-    <select id="leaseYears" class="w-full border p-3 rounded-lg text-lg" onchange="updateLeaseType()">
-     <option value="1">1 年</option>
-     <option value="2">2 年</option>
-     <option value="3" selected>3 年</option>
-     <option value="4">4 年</option>
-     <option value="5">5 年</option>
-     <option value="0">自住</option>
-    </select>
-   </div>
-  </div>
-
-  <!-- 差餉 + 地租 -->
-  <div class="grid grid-cols-2 gap-3">
-   <div class="bg-gray-50 p-3 rounded-lg">
-    <label class="block text-sm font-medium text-gray-700 mb-1">年差餉 (HK$)</label>
-    <input id="rates" type="number" inputmode="decimal" placeholder="0=自動5%" 
-           class="w-full border p-3 rounded-lg text-lg">
-   </div>
-   <div class="bg-gray-50 p-3 rounded-lg">
-    <label class="block text-sm font-medium text-gray-700 mb-1">年地租 (HK$)</label>
-    <input id="govrent" type="number" inputmode="decimal" placeholder="0=自動3%" 
-           class="w-full border p-3 rounded-lg text-lg">
-   </div>
-  </div>
-
-  <!-- 管理費 -->
-  <div class="bg-gray-50 p-3 rounded-lg">
-   <label class="block text-sm font-medium text-gray-700 mb-1">月管理費 (HK$)</label>
-   <div class="flex items-center gap-2">
-    <button onclick="adjustValue('mgmt', -100)" class="btn-spinner bg-red-500 text-white rounded-lg font-bold text-xl active:bg-red-600">−</button>
-    <input id="mgmt" type="number" inputmode="decimal" value="1500" 
-           class="w-full border p-3 rounded-lg text-lg text-center">
-    <button onclick="adjustValue('mgmt', 100)" class="btn-spinner bg-green-500 text-white rounded-lg font-bold text-xl active:bg-green-600">+</button>
-   </div>
-  </div>
-
-  <!-- 一次性支出 -->
-  <div class="bg-yellow-50 p-3 rounded-lg">
-   <div class="text-sm font-medium text-yellow-800 mb-2">💰 買樓一次性支出</div>
-   <div class="grid grid-cols-3 gap-2">
-    <div>
-     <label class="block text-xs text-gray-600 mb-1">印花稅 (HK$)</label>
-     <input id="buyStampDuty" type="number" inputmode="decimal" class="w-full border p-2 rounded text-sm text-center bg-white" readonly>
-    </div>
-    <div>
-     <label class="block text-xs text-gray-600 mb-1">律師費 (HK$)</label>
-     <input id="lawyerFee" type="number" inputmode="decimal" value="10000" class="w-full border p-2 rounded text-sm text-center">
-    </div>
-    <div>
-     <label class="block text-xs text-gray-600 mb-1">經紀費 (HK$)</label>
-     <input id="agentFee" type="number" inputmode="decimal" value="0" class="w-full border p-2 rounded text-sm text-center" placeholder="auto 1.5%">
-    </div>
-   </div>
-  </div>
-
-  <button onclick="calc()" 
-          class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:bg-blue-700 transition">
-   重新計算
+  <!-- Chart Toggle -->
+  <button class="toggle-chart-btn" id="chartToggle" onclick="toggleChart()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 3v18h18"/><path d="M18 17l-5-5-4 4-3-3"/>
+    </svg>
+    <span>圖表分析</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
   </button>
 
-  <!-- 現金流結果 (移動到按鈕下方) -->
-  <div id="cashFlowResult"></div>
+  <!-- Chart Section -->
+  <div class="chart-section" id="chartSection">
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-title">最佳按揭比例分析</div>
+        <div class="chart-subtitle">移動 Slider 實時更新</div>
+      </div>
 
-  <!-- 圖表區域 -->
-  <div id="chartSection">
-   <div class="bg-white p-4 rounded-xl shadow mb-4">
-    <div class="text-center text-sm text-gray-500 mb-2">📈 最佳按揭比例分析</div>
-    <div class="text-xs text-gray-400 mb-3">移動Slider或修改首期，圖表會實時更新</div>
-    
-    <!-- 關聯Slider -->
-    <input type="range" id="downRatio" min="10" max="90" value="20" class="w-full mb-2" oninput="syncDownFromSlider()">
-    <div class="flex justify-between text-sm mb-4">
-     <span>首期: <span id="ratioDisplay">20</span>%</span>
-     <span>按揭: <span id="loanDisplay">80</span>%</span>
+      <div class="slider-container">
+        <div class="slider-labels">
+          <span>首期: <span class="slider-value" id="ratioDisplay">20</span>%</span>
+          <span>按揭: <span class="slider-value" id="loanDisplay">80</span>%</span>
+        </div>
+        <input type="range" class="slider" id="downRatio" min="10" max="90" value="20" oninput="syncDownFromSlider()">
+      </div>
+
+      <div class="grid-2" style="margin-bottom: 16px;">
+        <div class="expense-item" style="background: var(--bg-card);">
+          <div class="expense-label">樓價</div>
+          <div class="expense-value" id="chartPrice">$5,000,000</div>
+        </div>
+        <div class="expense-item" style="background: var(--bg-card);">
+          <div class="expense-label">首期</div>
+          <div class="expense-value" id="chartDown">$1,000,000</div>
+        </div>
+      </div>
+
+      <canvas id="analysisChart"></canvas>
+
+      <div class="optimal-box">
+        <div class="optimal-label">最佳回報</div>
+        <div class="optimal-value">首期 <span id="optimalDown">30</span>% = <span id="optimalReturn">5.2</span>%</div>
+      </div>
     </div>
-    
-    <!-- 數值顯示 -->
-    <div class="grid grid-cols-3 gap-2 mb-4 text-center">
-     <div class="bg-blue-50 p-2 rounded-lg">
-      <div class="text-xs text-gray-500">樓價</div>
-      <div id="chartPrice" class="font-bold text-sm">$5,000,000</div>
-     </div>
-     <div class="bg-green-50 p-2 rounded-lg">
-      <div class="text-xs text-gray-500">首期</div>
-      <div id="chartDown" class="font-bold text-sm text-green-700">$1,000,000</div>
-     </div>
-     <div class="bg-red-50 p-2 rounded-lg">
-      <div class="text-xs text-gray-500">按揭</div>
-      <div id="chartLoan" class="font-bold text-sm text-red-700">$4,000,000</div>
-     </div>
-    </div>
-    
-    <!-- 線形圖 -->
-    <canvas id="analysisChart" height="200"></canvas>
-    
-    <!-- 最優結果 -->
-    <div id="optimalResult" class="mt-4 p-3 bg-yellow-50 rounded-lg text-center hidden">
-     <div class="text-sm text-gray-600">🎯 最佳回報</div>
-     <div class="text-lg font-bold text-yellow-700">首期 <span id="optimalDown">30</span>% = 回報 <span id="optimalReturn">5.2</span>%</div>
-    </div>
-   </div>
   </div>
 
-  <!-- 結果 -->
-  <div id="result" class="space-y-3"></div>
- </div>
+  <!-- Property Price -->
+  <div class="card">
+    <div class="section-title">樓價</div>
+    <div class="input-group">
+      <div class="input-label">樓價 (HK$)</div>
+      <div class="number-input-wrapper">
+        <button class="number-btn minus" onclick="adjustValue('price', -100000)">−</button>
+        <input type="number" class="number-input" id="price" value="5000000" inputmode="decimal" oninput="syncDownFromInput()">
+        <button class="number-btn plus" onclick="adjustValue('price', 100000)">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Down Payment & Rate -->
+  <div class="card">
+    <div class="section-title">按揭資料</div>
+    <div class="grid-2">
+      <div class="input-group">
+        <div class="input-label">首期 (HK$)</div>
+        <div class="number-input-wrapper">
+          <button class="number-btn minus" onclick="adjustValue('down', -100000)">−</button>
+          <input type="number" class="number-input" id="down" value="1000000" inputmode="decimal" oninput="syncDownFromInput()">
+          <button class="number-btn plus" onclick="adjustValue('down', 100000)">+</button>
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-label">按揭利率 (%)</div>
+        <div class="number-input-wrapper">
+          <button class="number-btn minus" onclick="adjustRate(-0.25)">−</button>
+          <input type="number" class="number-input" id="rate" value="3" step="0.01" inputmode="decimal">
+          <button class="number-btn plus" onclick="adjustRate(0.25)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="input-group" style="margin-top: 16px;">
+      <div class="input-label">還款年期</div>
+      <div class="select-wrapper">
+        <select class="select-input" id="years">
+          <option value="10">10 年</option>
+          <option value="15">15 年</option>
+          <option value="20">20 年</option>
+          <option value="25">25 年</option>
+          <option value="30" selected>30 年</option>
+        </select>
+        <span class="select-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rent & Lease -->
+  <div class="card">
+    <div class="section-title">租金收入</div>
+    <div class="grid-2">
+      <div class="input-group">
+        <div class="input-label">每月租金 (HK$)</div>
+        <div class="number-input-wrapper">
+          <button class="number-btn minus" onclick="adjustValue('rent', -500)">−</button>
+          <input type="number" class="number-input" id="rent" value="18000" inputmode="decimal">
+          <button class="number-btn plus" onclick="adjustValue('rent', 500)">+</button>
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-label">租約年期</div>
+        <div class="select-wrapper">
+          <select class="select-input" id="leaseYears" onchange="updateLeaseType()">
+            <option value="1">1 年</option>
+            <option value="2">2 年</option>
+            <option value="3" selected>3 年</option>
+            <option value="4">4 年</option>
+            <option value="5">5 年</option>
+            <option value="0">自住</option>
+          </select>
+          <span class="select-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expenses -->
+  <div class="card">
+    <div class="section-title">固定支出</div>
+    <div class="grid-2">
+      <div class="input-group">
+        <div class="input-label">年差餉 (HK$)</div>
+        <div class="number-input-wrapper">
+          <input type="number" class="number-input" id="rates" value="0" inputmode="decimal" placeholder="auto">
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-label">年地租 (HK$)</div>
+        <div class="number-input-wrapper">
+          <input type="number" class="number-input" id="govrent" value="0" inputmode="decimal" placeholder="auto">
+        </div>
+      </div>
+    </div>
+    <div class="input-group" style="margin-top: 16px;">
+      <div class="input-label">月管理費 (HK$)</div>
+      <div class="number-input-wrapper">
+        <button class="number-btn minus" onclick="adjustValue('mgmt', -100)">−</button>
+        <input type="number" class="number-input" id="mgmt" value="1500" inputmode="decimal">
+        <button class="number-btn plus" onclick="adjustValue('mgmt', 100)">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- One-time Expenses -->
+  <div class="card gold">
+    <div class="section-title">買樓一次性支出</div>
+    <div class="expense-grid">
+      <div class="expense-item">
+        <div class="expense-label">印花稅</div>
+        <div class="expense-value" id="buyStampDuty">$100</div>
+      </div>
+      <div class="expense-item">
+        <div class="expense-label">律師費</div>
+        <div class="number-input-wrapper" style="margin-top: 6px;">
+          <input type="number" class="number-input" id="lawyerFee" value="10000" inputmode="decimal" style="font-size: 12px;">
+        </div>
+      </div>
+      <div class="expense-item">
+        <div class="expense-label">經紀費</div>
+        <div class="number-input-wrapper" style="margin-top: 6px;">
+          <input type="number" class="number-input" id="agentFee" value="0" inputmode="decimal" placeholder="auto" style="font-size: 12px;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calculate Button -->
+  <button class="calc-btn" onclick="calc()">
+    重新計算
+  </button>
+
+  <!-- Results -->
+  <div id="result"></div>
+
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 let chartInstance = null;
-let showChart = true;
+let showChart = false;
 
 function toggleChart() {
   showChart = !showChart;
-  document.getElementById('chartSection').classList.toggle('hidden', !showChart);
+  const section = document.getElementById('chartSection');
+  const btn = document.getElementById('chartToggle');
+  section.classList.toggle('visible', showChart);
+  btn.classList.toggle('active', showChart);
   if (showChart) {
     initChart();
     updateChart();
   }
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 }
 
-// Slider -> 首期輸入 同步
 function syncDownFromSlider() {
   let price = parseFloat(document.getElementById('price').value) || 0;
   let ratio = parseFloat(document.getElementById('downRatio').value) || 20;
@@ -231,7 +819,6 @@ function syncDownFromSlider() {
   calc();
 }
 
-// 首期輸入 -> Slider 同步
 function syncDownFromInput() {
   let price = parseFloat(document.getElementById('price').value) || 0;
   let down = parseFloat(document.getElementById('down').value) || 0;
@@ -259,14 +846,388 @@ function adjustRate(delta) {
 function adjustValue(id, delta) {
   const input = document.getElementById(id);
   let value = parseFloat(input.value) || 0;
-  value = value + delta;
-  if (value < 0) value = 0;
+  value = Math.max(0, value + delta);
   input.value = value;
   if (id === 'down') {
     syncDownFromInput();
+  } else {
+    if (showChart) updateChart();
+    calc();
+  }
+}
+
+function updateLeaseType() {
+  let leaseYears = document.getElementById('leaseYears').value;
+  let rentInput = document.getElementById('rent');
+  let isSelfLive = (leaseYears === '0');
+
+  if (isSelfLive) {
+    rentInput.value = 0;
+    rentInput.disabled = true;
+    rentInput.style.opacity = '0.5';
+  } else {
+    rentInput.disabled = false;
+    rentInput.style.opacity = '1';
   }
   calc();
-  if (showChart) updateChart();
+}
+
+function formatMoney(num) {
+  return '$' + Math.round(num).toLocaleString();
+}
+
+function calc() {
+  let price = parseFloat(document.getElementById('price').value) || 0;
+  let down = parseFloat(document.getElementById('down').value) || 0;
+  let loan = price - down;
+
+  function calcBuyStampDuty(p) {
+    if (p <= 4000000) return 100;
+    if (p <= 4323780) return 100 + (p - 4000000) * 0.20;
+    if (p <= 4500000) return p * 0.015;
+    if (p <= 4935480) return 67500 + (p - 4500000) * 0.10;
+    if (p <= 6000000) return p * 0.0225;
+    if (p <= 6642860) return 135000 + (p - 6000000) * 0.10;
+    if (p <= 9000000) return p * 0.03;
+    if (p <= 10080000) return 270000 + (p - 9000000) * 0.10;
+    if (p <= 20000000) return p * 0.0375;
+    if (p <= 21739120) return 750000 + (p - 20000000) * 0.10;
+    if (p <= 100000000) return p * 0.0425;
+    if (p <= 109574470) return 4250000 + (p - 100000000) * 0.30;
+    return p * 0.065;
+  }
+
+  let buyStampDuty = calcBuyStampDuty(price);
+  let lawyerFee = parseFloat(document.getElementById('lawyerFee').value) || 10000;
+  let agentFeeInput = parseFloat(document.getElementById('agentFee').value);
+  let agentFee = !isNaN(agentFeeInput) && agentFeeInput > 0 ? agentFeeInput : price * 0.015;
+
+  document.getElementById('buyStampDuty').textContent = formatMoney(Math.round(buyStampDuty));
+
+  let totalOneTime = buyStampDuty + lawyerFee + agentFee;
+
+  let r = parseFloat(document.getElementById('rate').value)/100/12 || 0;
+  let n = parseFloat(document.getElementById('years').value)*12 || 0;
+  let pmt = (r === 0 || n === 0) ? 0 : loan * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1);
+  let monthlyMort = pmt;
+  let annualMort = pmt * 12;
+
+  let monthlyRent = parseFloat(document.getElementById('rent').value) || 0;
+  let annualRent = monthlyRent * 12;
+  let leaseYears = parseFloat(document.getElementById('leaseYears').value) ?? 1;
+  let isSelfOccupied = leaseYears === 0;
+
+  let stampDutyRate = isSelfOccupied ? 0 : (leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01));
+  let totalRent = annualRent * leaseYears;
+  let stampDuty = isSelfOccupied ? 0 : (totalRent * stampDutyRate);
+
+  let inputRates = parseFloat(document.getElementById('rates').value) || 0;
+  let annualRates = inputRates > 0 ? inputRates : annualRent * 0.05;
+  let monthlyRates = annualRates / 12;
+
+  let inputGov = parseFloat(document.getElementById('govrent').value) || 0;
+  let annualGovRent = inputGov > 0 ? inputGov : annualRent * 0.03;
+  let monthlyGovRent = annualGovRent / 12;
+
+  let monthlyMgmt = parseFloat(document.getElementById('mgmt').value) || 0;
+  let annualMgmt = monthlyMgmt * 12;
+
+  let assessable = annualRent - annualRates;
+  let nav = assessable * 0.8;
+  let tax = isSelfOccupied ? 0 : Math.max(nav * 0.15, 0);
+  let monthlyTax = tax / 12;
+
+  let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - annualMort;
+  let netMonthlyCash = netAnnualCash / 12;
+
+  let paybackMonths = netMonthlyCash > 0 ? Math.ceil(totalOneTime / netMonthlyCash) : 999;
+  let paybackYears = paybackMonths < 999 ? (paybackMonths / 12).toFixed(1) : '∞';
+
+  let cashReturn = down > 0 ? (netAnnualCash / down * 100).toFixed(2) : 0;
+  let grossYield = price > 0 ? (annualRent / price * 100).toFixed(2) : 0;
+
+  let isAutoR = inputRates <= 0 ? "（自動）" : "";
+  let isAutoG = inputGov <= 0 ? "（自動）" : "";
+
+  let cashClass = netAnnualCash >= 0 ? 'positive' : 'negative';
+  let cashBadgeClass = netAnnualCash >= 0 ? 'positive' : 'negative';
+  let paybackClass = paybackMonths < 120 ? 'good' : 'bad';
+
+  document.getElementById('result').innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <div class="result-title">年淨現金流</div>
+        <div class="result-main ${cashClass}">${formatMoney(Math.round(netAnnualCash))}</div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="result-item-label">月淨現金流</div>
+          <div class="result-item-value">${formatMoney(Math.round(netMonthlyCash))}</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">毛租金回報</div>
+          <div class="result-item-value">${grossYield}%</div>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <div class="cash-return-badge ${cashBadgeClass}">
+          現金回報率：${cashReturn}%
+        </div>
+      </div>
+
+      <div class="payback-box">
+        <div class="payback-label">回本期</div>
+        <div class="payback-value ${paybackClass}">
+          ${paybackMonths < 999 ? paybackMonths + ' 個月' : '無法回本'}
+        </div>
+        <div class="payback-sub">(${paybackYears} 年)</div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-title">樓價資料</div>
+      <div class="detail-row">
+        <span class="detail-label">樓價</span>
+        <span class="detail-value">${formatMoney(price)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">首期</span>
+        <span class="detail-value">${formatMoney(down)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">按揭金額</span>
+        <span class="detail-value">${formatMoney(loan)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">月供款</span>
+        <span class="detail-value">${formatMoney(Math.round(monthlyMort))}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">年供款</span>
+        <span class="detail-value">${formatMoney(Math.round(annualMort))}</span>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-title">一次性支出</div>
+      <div class="detail-row">
+        <span class="detail-label">印花稅</span>
+        <span class="detail-value highlight">${formatMoney(Math.round(buyStampDuty))}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">律師費</span>
+        <span class="detail-value">${formatMoney(lawyerFee)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">經紀費</span>
+        <span class="detail-value">${formatMoney(Math.round(agentFee))}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">租客釐印費</span>
+        <span class="detail-value">${formatMoney(Math.round(stampDuty))}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">總額</span>
+        <span class="detail-value highlight">${formatMoney(Math.round(totalOneTime + stampDuty))}</span>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-title">租金收入</div>
+      <div class="detail-row">
+        <span class="detail-label">月租金</span>
+        <span class="detail-value green">${formatMoney(monthlyRent)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">年租金</span>
+        <span class="detail-value green">${formatMoney(annualRent)}</span>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-title">稅務計算</div>
+      <div class="detail-row">
+        <span class="detail-label">年物业税</span>
+        <span class="detail-value red">${formatMoney(Math.round(tax))}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">月物业税</span>
+        <span class="detail-value red">${formatMoney(Math.round(monthlyTax))}</span>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-title">支出</div>
+      <div class="detail-row">
+        <span class="detail-label">年地租 ${isAutoG}</span>
+        <span class="detail-value">${formatMoney(Math.round(annualGovRent))}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">月地租</span>
+        <span class="detail-value">${formatMoney(Math.round(monthlyGovRent))}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">年差餉 ${isAutoR}</span>
+        <span class="detail-value">${formatMoney(Math.round(annualRates))}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">月差餉</span>
+        <span class="detail-value">${formatMoney(Math.round(monthlyRates))}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">年管理費</span>
+        <span class="detail-value">${formatMoney(Math.round(annualMgmt))}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">月管理費</span>
+        <span class="detail-value">${formatMoney(Math.round(monthlyMgmt))}</span>
+      </div>
+    </div>
+  `;
+}
+
+function initChart() {
+  const ctx = document.getElementById('analysisChart').getContext('2d');
+
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: '現金回報率 (%)',
+        data: [],
+        borderColor: '#c9a962',
+        backgroundColor: 'rgba(201, 169, 98, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: '#c9a962',
+        pointBorderColor: '#0a0a0b',
+        pointBorderWidth: 2
+      }, {
+        label: '月淨現金流',
+        data: [],
+        borderColor: '#4ade80',
+        backgroundColor: 'rgba(74, 222, 128, 0.05)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: '#4ade80',
+        pointBorderColor: '#0a0a0b',
+        pointBorderWidth: 2,
+        yAxisID: 'y1'
+      }]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#5a5a5e', font: { family: 'Outfit' } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#5a5a5e', font: { family: 'Outfit' } },
+          beginAtZero: true,
+          title: { display: true, text: '回報率 (%)', color: '#5a5a5e' }
+        },
+        y1: {
+          grid: { drawOnChartArea: false },
+          ticks: { color: '#5a5a5e', font: { family: 'Outfit' } },
+          beginAtZero: true,
+          position: 'right',
+          title: { display: true, text: '月現金流', color: '#5a5a5e' }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: '#9a9a9e', font: { family: 'Outfit' }, usePointStyle: true, pointStyle: 'circle' }
+        },
+        tooltip: {
+          backgroundColor: '#16161a',
+          titleColor: '#f5f5f3',
+          bodyColor: '#9a9a9e',
+          borderColor: '#2a2a30',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8
+        }
+      }
+    }
+  });
+}
+
+function updateChart() {
+  let price = parseFloat(document.getElementById('price').value) || 0;
+  let currentRatio = parseFloat(document.getElementById('downRatio').value) || 20;
+
+  document.getElementById('ratioDisplay').textContent = currentRatio;
+  document.getElementById('loanDisplay').textContent = 100 - currentRatio;
+
+  let currentDown = price * (currentRatio / 100);
+
+  document.getElementById('chartPrice').textContent = formatMoney(price);
+  document.getElementById('chartDown').textContent = formatMoney(currentDown);
+
+  let ratios = [];
+  let returns = [];
+  let cashflows = [];
+  let maxReturn = -999999;
+  let optimalRatio = 20;
+  let optimalReturn = 0;
+
+  for (let r = 10; r <= 90; r += 5) {
+    ratios.push(r + '%');
+
+    let down = price * (r / 100);
+    let loan = price - down;
+
+    let rate = parseFloat(document.getElementById('rate').value)/100/12 || 0;
+    let n = parseFloat(document.getElementById('years').value)*12 || 0;
+    let pmt = (rate === 0 || n === 0) ? 0 : loan * rate * Math.pow(1+rate,n) / (Math.pow(1+rate,n)-1);
+
+    let monthlyRent = parseFloat(document.getElementById('rent').value) || 0;
+    let annualRent = monthlyRent * 12;
+    let annualRates = annualRent * 0.05;
+    let annualGovRent = annualRent * 0.03;
+    let monthlyMgmt = parseFloat(document.getElementById('mgmt').value) || 0;
+    let annualMgmt = monthlyMgmt * 12;
+    let assessable = annualRent - annualRates;
+    let nav = assessable * 0.8;
+    let leaseYears = parseFloat(document.getElementById('leaseYears').value) ?? 1;
+    let isSelfOccupied = leaseYears === 0;
+    let tax = isSelfOccupied ? 0 : Math.max(nav * 0.15, 0);
+
+    let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - (pmt * 12);
+    let netMonthlyCash = netAnnualCash / 12;
+    let cashReturn = down > 0 ? (netAnnualCash / down * 100) : 0;
+
+    returns.push(cashReturn);
+    cashflows.push(netMonthlyCash);
+
+    if (cashReturn > maxReturn) {
+      maxReturn = cashReturn;
+      optimalRatio = r;
+      optimalReturn = cashReturn;
+    }
+  }
+
+  if (chartInstance) {
+    chartInstance.data.labels = ratios;
+    chartInstance.data.datasets[0].data = returns;
+    chartInstance.data.datasets[1].data = cashflows;
+    chartInstance.update();
+  }
+
+  document.getElementById('optimalDown').textContent = optimalRatio;
+  document.getElementById('optimalReturn').textContent = optimalReturn.toFixed(2);
 }
 
 // Auto-calculate on load
@@ -285,418 +1246,6 @@ document.querySelectorAll('select').forEach(select => {
     if (showChart) updateChart();
   });
 });
-
-function formatMoney(num) {
-  return '$' + Math.round(num).toLocaleString();
-}
-
-function updateLeaseType() {
-  let leaseYears = document.getElementById('leaseYears').value;
-  let rentInput = document.getElementById('rent');
-  let isSelfLive = (leaseYears === '0');
-  
-  if (isSelfLive) {
-    rentInput.value = 0;
-    rentInput.disabled = true;
-    rentInput.style.opacity = '0.5';
-    // 禁用 +/- 按鈕
-    rentInput.previousElementSibling.disabled = true;
-    rentInput.nextElementSibling.disabled = true;
-  } else {
-    rentInput.disabled = false;
-    rentInput.style.opacity = '1';
-    rentInput.previousElementSibling.disabled = false;
-    rentInput.nextElementSibling.disabled = false;
-  }
-  
-  calc();
-}
-
-function calc() {
- let price = parseFloat(document.getElementById('price').value) || 0;
- let down = parseFloat(document.getElementById('down').value) || 0;
- let loan = price - down;
-
- // 計算買樓印花稅 (2026年2月26日起階梯)
- function calcBuyStampDuty(p) {
-   if (p <= 4000000) return 100;
-   if (p <= 4323780) return 100 + (p - 4000000) * 0.20;
-   if (p <= 4500000) return p * 0.015;
-   if (p <= 4935480) return 67500 + (p - 4500000) * 0.10;
-   if (p <= 6000000) return p * 0.0225;
-   if (p <= 6642860) return 135000 + (p - 6000000) * 0.10;
-   if (p <= 9000000) return p * 0.03;
-   if (p <= 10080000) return 270000 + (p - 9000000) * 0.10;
-   if (p <= 20000000) return p * 0.0375;
-   if (p <= 21739120) return 750000 + (p - 20000000) * 0.10;
-   if (p <= 100000000) return p * 0.0425;
-   if (p <= 109574470) return 4250000 + (p - 100000000) * 0.30;
-   return p * 0.065;
- }
- 
- let buyStampDuty = calcBuyStampDuty(price);
- let lawyerFee = parseFloat(document.getElementById('lawyerFee').value) || 10000;
- let agentFeeInput = parseFloat(document.getElementById('agentFee').value);
- let agentFee = !isNaN(agentFeeInput) && agentFeeInput > 0 ? agentFeeInput : price * 0.015;
- 
- // 更新印花稅和經紀費顯示
- document.getElementById('buyStampDuty').value = Math.round(buyStampDuty);
- if (isNaN(agentFeeInput) || agentFeeInput === 0) {
-   document.getElementById('agentFee').value = Math.round(agentFee);
- }
-
- // 一次性支出總額
- let totalOneTime = buyStampDuty + lawyerFee + agentFee;
-
- let r = parseFloat(document.getElementById('rate').value)/100/12 || 0;
- let n = parseFloat(document.getElementById('years').value)*12 || 0;
- let pmt = (r === 0 || n === 0) ? 0 : loan * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1);
- let monthlyMort = pmt;
- let annualMort = pmt * 12;
-
- let monthlyRent = parseFloat(document.getElementById('rent').value) || 0;
- let annualRent = monthlyRent * 12;
- let leaseYears = parseFloat(document.getElementById('leaseYears').value) ?? 1;
- let isSelfOccupied = leaseYears === 0; // 自住
- 
- // 釐印費（自住 = 0）
- let stampDutyRate = isSelfOccupied ? 0 : (leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01));
- let totalRent = annualRent * leaseYears;
- let stampDuty = isSelfOccupied ? 0 : (totalRent * stampDutyRate);
- let annualStampDuty = isSelfOccupied ? 0 : (stampDuty / leaseYears);
-
- let inputRates = parseFloat(document.getElementById('rates').value) || 0;
- let annualRates = inputRates > 0 ? inputRates : annualRent * 0.05;
- let monthlyRates = annualRates / 12;
-
- let inputGov = parseFloat(document.getElementById('govrent').value) || 0;
- let annualGovRent = inputGov > 0 ? inputGov : annualRent * 0.03;
- let monthlyGovRent = annualGovRent / 12;
-
- let monthlyMgmt = parseFloat(document.getElementById('mgmt').value) || 0;
- let annualMgmt = monthlyMgmt * 12;
-
- let assessable = annualRent - annualRates;
- let nav = assessable * 0.8;
- let tax = isSelfOccupied ? 0 : Math.max(nav * 0.15, 0);
- let monthlyTax = tax / 12;
-
- let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - annualMort;
- let netMonthlyCash = netAnnualCash / 12;
- 
- // 計算回本期
- let paybackMonths = netMonthlyCash > 0 ? Math.ceil(totalOneTime / netMonthlyCash) : 999;
- let paybackYears = paybackMonths < 999 ? (paybackMonths / 12).toFixed(1) : '∞';
- 
- let cashReturn = down > 0 ? (netAnnualCash / down * 100).toFixed(2) : 0;
- let grossYield = price > 0 ? (annualRent / price * 100).toFixed(2) : 0;
-
- let isAutoR = inputRates <= 0 ? "（自動）" : "";
- let isAutoG = inputGov <= 0 ? "（自動）" : "";
-
- let cashFlowBg = netAnnualCash >= 0 ? 'bg-green-100' : 'bg-red-100';
- let cashFlowText = netAnnualCash >= 0 ? 'text-green-700' : 'text-red-700';
- let cashFlowBtn = netAnnualCash >= 0 ? 'bg-green-600' : 'bg-red-600';
-
- document.getElementById('cashFlowResult').innerHTML = `
- <div class="${cashFlowBg} p-4 rounded-xl text-center">
-   <div class="grid grid-cols-2 gap-3 text-center mb-3">
-     <div>
-       <div class="text-gray-600 text-sm">年淨現金流</div>
-       <div class="text-xl font-bold ${cashFlowText}">${formatMoney(Math.round(netAnnualCash))}</div>
-     </div>
-     <div>
-       <div class="text-gray-600 text-sm">月淨現金流</div>
-       <div class="text-xl font-bold ${cashFlowText}">${formatMoney(Math.round(netMonthlyCash))}</div>
-     </div>
-   </div>
-   <div class="text-center mb-3">
-     <div class="${cashFlowBtn} text-white py-2 px-4 rounded-lg inline-block font-bold">
-      現金回報率：${cashReturn}%
-     </div>
-     <div class="text-gray-500 text-sm mt-2">毛租金回報率：${grossYield}%</div>
-   </div>
-   <!-- 回本期 -->
-   <div class="pt-3 border-t ${netMonthlyCash > 0 ? 'bg-blue-50' : 'bg-red-50'} rounded-lg">
-     <div class="text-sm text-gray-600">🎯 回本期</div>
-     <div class="text-2xl font-bold ${netMonthlyCash > 0 ? 'text-blue-700' : 'text-red-700'}">
-      ${paybackMonths < 999 ? paybackMonths + ' 個月' : '無法回本'}
-     </div>
-     <div class="text-xs text-gray-500">(${paybackYears} 年)</div>
-   </div>
- </div>
- `;
-
- document.getElementById('result').innerHTML = `
- <div class="bg-gray-50 p-4 rounded-xl">
- <div class="flex justify-between items-center border-b pb-2 mb-3">
-   <span class="font-bold text-gray-700">樓價</span>
-   <span class="text-lg">${formatMoney(price)}</span>
- </div>
- <div class="flex justify-between items-center border-b pb-2 mb-3">
-   <span class="text-gray-600">首期</span>
-   <span>${formatMoney(down)}</span>
- </div>
- 
- <!-- 一次性支出 -->
- <div class="bg-yellow-50 p-3 rounded-lg mb-3 text-sm">
-   <div class="font-semibold text-yellow-800 mb-2">🏠 買樓一次性支出</div>
-   <div class="grid grid-cols-2 gap-2 text-center mb-2">
-    <div class="bg-yellow-100 p-2 rounded-lg">
-     <div class="text-gray-500 text-xs">印花稅</div>
-     <div class="font-bold text-yellow-700">${formatMoney(Math.round(buyStampDuty))}</div>
-    </div>
-    <div class="bg-yellow-100 p-2 rounded-lg">
-     <div class="text-gray-500 text-xs">律師費</div>
-     <div class="font-bold text-yellow-700">${formatMoney(lawyerFee)}</div>
-    </div>
-   </div>
-   <div class="grid grid-cols-2 gap-2 text-center mb-2">
-    <div class="bg-yellow-100 p-2 rounded-lg">
-     <div class="text-gray-500 text-xs">經紀費</div>
-     <div class="font-bold text-yellow-700">${formatMoney(Math.round(agentFee))}</div>
-    </div>
-    <div class="bg-yellow-100 p-2 rounded-lg">
-     <div class="text-gray-500 text-xs">租客釐印費</div>
-     <div class="font-bold text-yellow-700">${formatMoney(Math.round(stampDuty))}</div>
-    </div>
-   </div>
-   <div class="text-center pt-2 border-t border-yellow-200">
-    <div class="text-xs text-gray-500">總額</div>
-    <div class="font-bold text-lg text-yellow-800">${formatMoney(Math.round(totalOneTime + stampDuty))}</div>
-   </div>
- </div>
- 
- <div class="bg-white p-3 rounded-lg mb-3 text-sm">
-   <div class="font-semibold text-gray-700 mb-2">💰 租金收入</div>
-   <div class="grid grid-cols-2 gap-2 text-center">
-     <div class="bg-blue-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">年</div>
-       <div class="font-bold text-lg">${formatMoney(annualRent)}</div>
-     </div>
-     <div class="bg-blue-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">月</div>
-       <div class="font-bold text-lg">${formatMoney(monthlyRent)}</div>
-     </div>
-   </div>
- </div>
- 
- <div class="bg-white p-3 rounded-lg mb-3 text-sm">
-   <div class="font-semibold text-gray-700 mb-2">🏛️ 稅務計算</div>
-   <div class="grid grid-cols-2 gap-2 text-center mb-2">
-     <div class="bg-red-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">年物业税</div>
-       <div class="font-bold text-red-600">${formatMoney(Math.round(tax))}</div>
-     </div>
-     <div class="bg-red-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">月物业税</div>
-       <div class="font-bold text-red-600">${formatMoney(Math.round(monthlyTax))}</div>
-     </div>
-   </div>
- </div>
- 
- <div class="bg-white p-3 rounded-lg mb-3 text-sm">
-   <div class="font-semibold text-gray-700 mb-2">📋 支出</div>
-   <div class="grid grid-cols-2 gap-2 text-center mb-2">
-     <div class="bg-gray-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">年地租</div>
-       <div class="font-bold">${formatMoney(Math.round(annualGovRent))}${isAutoG}</div>
-     </div>
-     <div class="bg-gray-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">月地租</div>
-       <div class="font-bold">${formatMoney(Math.round(monthlyGovRent))}</div>
-     </div>
-   </div>
-   <div class="grid grid-cols-2 gap-2 text-center mb-2">
-     <div class="bg-gray-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">年差餉</div>
-       <div class="font-bold">${formatMoney(Math.round(annualRates))}${isAutoR}</div>
-     </div>
-     <div class="bg-gray-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">月差餉</div>
-       <div class="font-bold">${formatMoney(Math.round(monthlyRates))}</div>
-     </div>
-   </div>
-   <div class="grid grid-cols-2 gap-2 text-center mb-2">
-     <div class="bg-gray-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">年管理費</div>
-       <div class="font-bold">${formatMoney(Math.round(annualMgmt))}</div>
-     </div>
-     <div class="bg-gray-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">月管理費</div>
-       <div class="font-bold">${formatMoney(Math.round(monthlyMgmt))}</div>
-     </div>
-   </div>
-   <div class="grid grid-cols-2 gap-2 text-center mb-2">
-     <div class="bg-gray-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">年供款</div>
-       <div class="font-bold">${formatMoney(Math.round(annualMort))}</div>
-     </div>
-     <div class="bg-gray-50 p-2 rounded-lg">
-       <div class="text-gray-500 text-xs">月供款</div>
-       <div class="font-bold">${formatMoney(Math.round(monthlyMort))}</div>
-     </div>
-   </div>
- </div>
- 
- </div>
- `;
-}
-
-function initChart() {
-  const ctx = document.getElementById('analysisChart').getContext('2d');
-  
-  if (chartInstance) {
-    chartInstance.destroy();
-  }
-
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: [],
-      datasets: [{
-        label: '現金回報率 (%)',
-        data: [],
-        borderColor: 'rgba(59, 130, 246, 1)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointBackgroundColor: 'rgba(59, 130, 246, 1)'
-      }, {
-        label: '月淨現金流 (HK$)',
-        data: [],
-        borderColor: 'rgba(34, 197, 94, 1)',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointBackgroundColor: 'rgba(34, 197, 94, 1)',
-        yAxisID: 'y1'
-      }]
-    },
-    options: {
-      responsive: true,
-      interaction: {
-        mode: 'index',
-        intersect: false,
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: '首期比例 (%)'
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: '回報率 (%)'
-          },
-          beginAtZero: true
-        },
-        y1: {
-          title: {
-            display: true,
-            text: '月現金流 (HK$)'
-          },
-          beginAtZero: true,
-          position: 'right',
-          grid: {
-            drawOnChartArea: false
-          }
-        }
-      },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              if (context.datasetIndex === 0) {
-                return '回報率: ' + context.raw.toFixed(2) + '%';
-              } else {
-                return '月現金流: $' + Math.round(context.raw).toLocaleString();
-              }
-            }
-          }
-        }
-      }
-    }
-  });
-}
-
-function updateChart() {
-  let price = parseFloat(document.getElementById('price').value) || 0;
-  let currentRatio = parseFloat(document.getElementById('downRatio').value) || 20;
-  
-  // 同步顯示
-  document.getElementById('ratioDisplay').textContent = currentRatio;
-  document.getElementById('loanDisplay').textContent = 100 - currentRatio;
-  
-  let currentDown = price * (currentRatio / 100);
-  let currentLoan = price * (currentRatio / 100);
-  
-  document.getElementById('chartPrice').textContent = formatMoney(price);
-  document.getElementById('chartDown').textContent = formatMoney(currentDown);
-  document.getElementById('chartLoan').textContent = formatMoney(price - currentDown);
-  
-  // 計算不同比例的數據
-  let ratios = [];
-  let returns = [];
-  let cashflows = [];
-  let maxReturn = -999999;
-  let optimalRatio = 20;
-  let optimalReturn = 0;
-  
-  for (let r = 10; r <= 90; r += 5) {
-    ratios.push(r + '%');
-    
-    let down = price * (r / 100);
-    let loan = price * ((100 - r) / 100);
-    
-    let rate = parseFloat(document.getElementById('rate').value)/100/12 || 0;
-    let n = parseFloat(document.getElementById('years').value)*12 || 0;
-    let pmt = (rate === 0 || n === 0) ? 0 : loan * rate * Math.pow(1+rate,n) / (Math.pow(1+rate,n)-1);
-    
-    let monthlyRent = parseFloat(document.getElementById('rent').value) || 0;
-    let annualRent = monthlyRent * 12;
-    let annualRates = annualRent * 0.05;
-    let annualGovRent = annualRent * 0.03;
-    let monthlyMgmt = parseFloat(document.getElementById('mgmt').value) || 0;
-    let annualMgmt = monthlyMgmt * 12;
-    let assessable = annualRent - annualRates;
-    let nav = assessable * 0.8;
-    let leaseYears = parseFloat(document.getElementById('leaseYears').value) ?? 1;
-    let isSelfOccupied = leaseYears === 0;
-    let tax = isSelfOccupied ? 0 : Math.max(nav * 0.15, 0);
-    let stampDutyRate = isSelfOccupied ? 0 : (leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01));
-    let annualStampDuty = isSelfOccupied ? 0 : (annualRent * leaseYears * stampDutyRate) / leaseYears;
-    
-    let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - (pmt * 12);
-    let netMonthlyCash = netAnnualCash / 12;
-    let cashReturn = down > 0 ? (netAnnualCash / down * 100) : 0;
-    
-    returns.push(cashReturn);
-    cashflows.push(netMonthlyCash);
-    
-    if (cashReturn > maxReturn) {
-      maxReturn = cashReturn;
-      optimalRatio = r;
-      optimalReturn = cashReturn;
-    }
-  }
-  
-  if (chartInstance) {
-    chartInstance.data.labels = ratios;
-    chartInstance.data.datasets[0].data = returns;
-    chartInstance.data.datasets[1].data = cashflows;
-    chartInstance.update();
-  }
-  
-  // 顯示最優結果
-  document.getElementById('optimalResult').classList.remove('hidden');
-  document.getElementById('optimalDown').textContent = optimalRatio;
-  document.getElementById('optimalReturn').textContent = optimalReturn.toFixed(2);
-}
 </script>
 </body>
 </html>
