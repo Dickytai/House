@@ -6,7 +6,7 @@
 <title>香港租金回報計算器</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-primary: #0a0a0b;
@@ -27,159 +27,84 @@
     --green-dim: rgba(74, 222, 128, 0.15);
     --red: #f87171;
     --red-dim: rgba(248, 113, 113, 0.15);
-    --shadow-gold: 0 4px 24px rgba(201, 169, 98, 0.12);
-    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html {
     height: 100%;
-    overflow-y: scroll;
-    scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
   }
   body {
     font-family: 'Outfit', sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
-    min-height: 100dvh;
+    min-height: 100%;
+    height: auto;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    padding-bottom: env(safe-area-inset-bottom, 24px);
-  }
-
-  /* Noise texture overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: 1000;
   }
 
   .container {
     max-width: 480px;
     margin: 0 auto;
-    padding: 0 16px 48px;
+    padding: 0 12px 24px;
   }
 
-  /* Header */
+  /* Header - compact */
   .header {
-    padding: 32px 0 24px;
+    padding: 16px 0 12px;
     text-align: center;
-    position: relative;
-  }
-  .header::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
-    pointer-events: none;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
   }
   .logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
+    font-size: 18px;
     font-weight: 600;
+    color: var(--gold);
     letter-spacing: 0.02em;
-    background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dim) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
   .subtitle {
-    font-size: 13px;
+    font-size: 10px;
     color: var(--text-dim);
     letter-spacing: 0.15em;
     text-transform: uppercase;
   }
 
-  /* Toggle Button */
-  .toggle-chart-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 14px 20px;
-    margin: 24px 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: var(--text-secondary);
-    font-family: 'Outfit', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  .toggle-chart-btn:hover {
-    border-color: var(--gold-dim);
-    color: var(--gold);
-  }
-  .toggle-chart-btn svg {
-    transition: transform 0.3s ease;
-  }
-  .toggle-chart-btn.active svg {
-    transform: rotate(180deg);
-  }
-
-  /* Card */
+  /* Card - compact */
   .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
   }
-  .card:hover {
-    border-color: var(--border-light);
-  }
-  .card.gold:hover {
+  .card.gold {
     border-color: var(--gold-dim);
-    box-shadow: var(--shadow-gold);
   }
 
   /* Section Title */
   .section-title {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--text-dim);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .section-title::before {
-    content: '';
-    width: 20px;
-    height: 1px;
-    background: linear-gradient(90deg, var(--gold-dim), transparent);
+    margin-bottom: 8px;
   }
 
   /* Input Group */
   .input-group {
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
   .input-group:last-child {
     margin-bottom: 0;
   }
   .input-label {
     display: block;
-    font-size: 13px;
+    font-size: 11px;
     color: var(--text-secondary);
-    margin-bottom: 10px;
+    margin-bottom: 4px;
   }
 
   /* Number Input */
@@ -188,33 +113,22 @@
     align-items: stretch;
     background: var(--bg-input);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 8px;
     overflow: hidden;
-    transition: border-color 0.2s ease;
-  }
-  .number-input-wrapper:focus-within {
-    border-color: var(--gold-dim);
   }
   .number-btn {
-    width: 48px;
+    width: 36px;
     background: transparent;
     border: none;
     color: var(--text-dim);
-    font-size: 20px;
-    font-weight: 300;
+    font-size: 16px;
     cursor: pointer;
-    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
-  .number-btn:hover {
-    background: var(--bg-card-hover);
-    color: var(--gold);
-  }
-  .number-btn:active {
-    background: var(--gold-glow);
-  }
+  .number-btn:hover { color: var(--gold); background: var(--bg-card-hover); }
   .number-btn.minus { border-right: 1px solid var(--border); }
   .number-btn.plus { border-left: 1px solid var(--border); }
   .number-input {
@@ -223,16 +137,12 @@
     border: none;
     text-align: center;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 18px;
-    font-weight: 500;
+    font-size: 14px;
     color: var(--text-primary);
-    padding: 14px 8px;
+    padding: 8px 4px;
     min-width: 0;
   }
-  .number-input:focus {
-    outline: none;
-  }
-  /* Remove number arrows */
+  .number-input:focus { outline: none; }
   .number-input::-webkit-inner-spin-button,
   .number-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   .number-input { -moz-appearance: textfield; }
@@ -245,22 +155,18 @@
     width: 100%;
     background: var(--bg-input);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 40px 14px 14px;
+    border-radius: 8px;
+    padding: 8px 32px 8px 10px;
     font-family: 'Outfit', sans-serif;
-    font-size: 16px;
+    font-size: 13px;
     color: var(--text-primary);
     cursor: pointer;
     appearance: none;
-    transition: border-color 0.2s ease;
   }
-  .select-input:focus {
-    outline: none;
-    border-color: var(--gold-dim);
-  }
+  .select-input:focus { outline: none; border-color: var(--gold-dim); }
   .select-arrow {
     position: absolute;
-    right: 14px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
@@ -271,74 +177,70 @@
   .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 8px;
   }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+
+  /* Toggle Button */
+  .toggle-chart-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .toggle-chart-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
 
   /* Calculate Button */
   .calc-btn {
     width: 100%;
-    padding: 18px 24px;
-    margin: 24px 0;
+    padding: 14px;
+    margin: 8px 0;
     background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold) 100%);
     border: none;
-    border-radius: 12px;
+    border-radius: 10px;
     font-family: 'Outfit', sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: #0a0a0b;
-    letter-spacing: 0.05em;
     cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
   }
-  .calc-btn::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%;
-    width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s ease;
-  }
-  .calc-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(201, 169, 98, 0.3);
-  }
-  .calc-btn:hover::before {
-    left: 100%;
-  }
-  .calc-btn:active {
-    transform: translateY(0);
-  }
+  .calc-btn:hover { box-shadow: 0 4px 16px rgba(201, 169, 98, 0.3); }
 
   /* Results */
   .result-card {
     background: linear-gradient(135deg, var(--bg-card) 0%, rgba(201, 169, 98, 0.05) 100%);
     border: 1px solid var(--gold-dim);
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 16px;
-    animation: fadeIn 0.5s ease;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
   .result-header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
   .result-title {
-    font-size: 12px;
+    font-size: 10px;
     color: var(--text-dim);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
   .result-main {
-    font-family: 'Playfair Display', serif;
-    font-size: 36px;
+    font-size: 24px;
     font-weight: 600;
     color: var(--gold);
   }
@@ -348,111 +250,71 @@
   .result-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 8px;
+    margin-bottom: 10px;
   }
   .result-item {
     background: var(--bg-primary);
-    border-radius: 10px;
-    padding: 14px;
+    border-radius: 8px;
+    padding: 10px;
     text-align: center;
   }
   .result-item-label {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-dim);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
   .result-item-value {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
-    font-weight: 500;
+    font-size: 13px;
     color: var(--text-primary);
   }
 
-  /* Cash Return Badge */
   .cash-return-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 16px;
-    border-radius: 8px;
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    font-weight: 500;
-    margin-top: 16px;
+    font-size: 12px;
+    margin-bottom: 10px;
   }
-  .cash-return-badge.positive {
-    background: var(--green-dim);
-    color: var(--green);
-  }
-  .cash-return-badge.negative {
-    background: var(--red-dim);
-    color: var(--red);
-  }
+  .cash-return-badge.positive { background: var(--green-dim); color: var(--green); }
+  .cash-return-badge.negative { background: var(--red-dim); color: var(--red); }
 
-  /* Payback Period */
   .payback-box {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
     text-align: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
   }
-  .payback-label {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-  }
-  .payback-value {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    font-weight: 600;
-  }
-  .payback-value.good { color: var(--gold-light); }
+  .payback-label { font-size: 10px; color: var(--text-dim); }
+  .payback-value { font-size: 20px; font-weight: 600; color: var(--gold-light); }
   .payback-value.bad { color: var(--red); }
-  .payback-sub {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
+  .payback-sub { font-size: 10px; color: var(--text-dim); }
 
   /* Detail Results */
   .detail-section {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
   }
   .detail-title {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin-bottom: 8px;
   }
   .detail-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
+    padding: 6px 0;
     border-bottom: 1px solid var(--border);
   }
-  .detail-row:last-child {
-    border-bottom: none;
-  }
-  .detail-label {
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-  .detail-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    color: var(--text-primary);
-  }
-  .detail-value.highlight {
-    color: var(--gold);
-  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { font-size: 11px; color: var(--text-secondary); }
+  .detail-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-primary); }
+  .detail-value.highlight { color: var(--gold); }
   .detail-value.green { color: var(--green); }
   .detail-value.red { color: var(--red); }
 
@@ -460,170 +322,87 @@
   .expense-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 6px;
   }
   .expense-item {
     background: var(--bg-primary);
-    border-radius: 10px;
-    padding: 12px 6px;
+    border-radius: 8px;
+    padding: 8px 4px;
     text-align: center;
-    overflow: hidden;
   }
-  .expense-label {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-  }
-  .expense-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: var(--gold);
-    word-break: break-all;
-  }
-  .expense-item .number-input-wrapper {
-    margin-top: 4px;
-  }
-  .expense-item .number-input {
-    font-size: 11px;
-    padding: 6px 2px;
-  }
+  .expense-label { font-size: 9px; color: var(--text-dim); margin-bottom: 4px; }
+  .expense-value { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); word-break: break-all; }
+  .expense-item .number-input-wrapper { margin-top: 4px; }
+  .expense-item .number-input { font-size: 10px; padding: 4px 2px; }
 
   /* Chart Section */
-  .chart-section {
-    margin: 24px 0;
-    display: none;
-  }
-  .chart-section.visible {
-    display: block;
-    animation: slideUp 0.4s ease;
-  }
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
+  .chart-section { display: none; }
+  .chart-section.visible { display: block; }
   .chart-container {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
   }
-  .chart-header {
-    text-align: center;
-    margin-bottom: 16px;
-  }
-  .chart-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-  }
-  .chart-subtitle {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
+  .chart-header { text-align: center; margin-bottom: 10px; }
+  .chart-title { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+  .chart-subtitle { font-size: 10px; color: var(--text-dim); }
 
-  /* Slider */
-  .slider-container {
-    margin: 20px 0;
-  }
+  .slider-container { margin: 10px 0; }
   .slider-labels {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-dim);
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
-  .slider-value {
-    color: var(--gold) !important;
-    font-weight: 500;
-  }
+  .slider-value { color: var(--gold) !important; font-weight: 500; }
   .slider {
     width: 100%;
-    height: 6px;
-    border-radius: 3px;
+    height: 4px;
+    border-radius: 2px;
     background: var(--bg-input);
-    outline: none;
     -webkit-appearance: none;
-    cursor: pointer;
   }
   .slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background: var(--gold);
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(201, 169, 98, 0.4);
-    transition: transform 0.2s ease;
-  }
-  .slider::-webkit-slider-thumb:hover {
-    transform: scale(1.1);
   }
 
-  /* Optimal Result */
   .optimal-box {
-    margin-top: 16px;
-    padding: 16px;
-    background: linear-gradient(135deg, rgba(201, 169, 98, 0.1) 0%, transparent 100%);
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(201, 169, 98, 0.1);
     border: 1px solid var(--gold-dim);
-    border-radius: 12px;
+    border-radius: 8px;
     text-align: center;
   }
-  .optimal-label {
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .optimal-value {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--gold);
-  }
+  .optimal-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
+  .optimal-value { font-size: 16px; font-weight: 600; color: var(--gold); }
 
-  /* Canvas */
-  #analysisChart {
-    max-height: 200px;
-  }
+  #analysisChart { max-height: 160px; }
 
-  /* Mobile adjustments */
-  @media (max-width: 480px) {
-    html, body { height: auto; min-height: 100dvh; }
-    .container { padding: 0 12px calc(32px + env(safe-area-inset-bottom, 0px)); }
-    .header { padding: 20px 0 16px; }
-    .logo { font-size: 22px; }
-    .subtitle { font-size: 11px; }
-    .card { padding: 14px; border-radius: 12px; margin-bottom: 12px; }
-    .section-title { margin-bottom: 12px; font-size: 10px; }
-    .input-label { font-size: 12px; margin-bottom: 8px; }
-    .number-btn { width: 40px; font-size: 18px; }
-    .number-input { font-size: 15px; padding: 10px 4px; }
-    .select-input { font-size: 14px; padding: 12px 36px 12px 12px; }
-    .result-main { font-size: 28px; }
-    .result-title { font-size: 11px; }
-    .payback-value { font-size: 24px; }
-    .detail-section { padding: 14px; margin-bottom: 12px; }
-    .detail-title { font-size: 12px; margin-bottom: 12px; }
-    .detail-row { padding: 8px 0; }
-    .detail-label, .detail-value { font-size: 12px; }
-    .expense-grid { gap: 6px; }
-    .expense-item { padding: 8px 4px; }
-    .expense-label { font-size: 10px; }
-    .expense-value { font-size: 11px; }
-    .calc-btn { padding: 16px; margin: 20px 0; font-size: 14px; }
-    .toggle-chart-btn { padding: 12px 16px; font-size: 13px; margin: 16px 0; }
-    .result-card { padding: 16px; margin-bottom: 12px; }
-    .result-grid { gap: 8px; }
-    .result-item { padding: 10px; }
-    .cash-return-badge { font-size: 12px; padding: 8px 12px; }
-    .chart-container { padding: 14px; }
+  /* Chart card price display */
+  .chart-price-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 10px;
   }
+  .chart-price-item {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+  }
+  .chart-price-label { font-size: 9px; color: var(--text-dim); }
+  .chart-price-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gold); }
 
-  /* Hide elements */
   .hidden { display: none !important; }
 </style>
 </head>
@@ -638,13 +417,7 @@
 
   <!-- Chart Toggle -->
   <button class="toggle-chart-btn" id="chartToggle" onclick="toggleChart()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M3 3v18h18"/><path d="M18 17l-5-5-4 4-3-3"/>
-    </svg>
-    <span>圖表分析</span>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <polyline points="6 9 12 15 18 9"/>
-    </svg>
+    <span>📊</span> 圖表分析
   </button>
 
   <!-- Chart Section -->
@@ -663,14 +436,14 @@
         <input type="range" class="slider" id="downRatio" min="10" max="90" value="20" oninput="syncDownFromSlider()">
       </div>
 
-      <div class="grid-2" style="margin-bottom: 16px;">
-        <div class="expense-item" style="background: var(--bg-card);">
-          <div class="expense-label">樓價</div>
-          <div class="expense-value" id="chartPrice">$5,000,000</div>
+      <div class="chart-price-grid">
+        <div class="chart-price-item">
+          <div class="chart-price-label">樓價</div>
+          <div class="chart-price-value" id="chartPrice">$5,000,000</div>
         </div>
-        <div class="expense-item" style="background: var(--bg-card);">
-          <div class="expense-label">首期</div>
-          <div class="expense-value" id="chartDown">$1,000,000</div>
+        <div class="chart-price-item">
+          <div class="chart-price-label">首期</div>
+          <div class="chart-price-value" id="chartDown">$1,000,000</div>
         </div>
       </div>
 
@@ -717,7 +490,7 @@
         </div>
       </div>
     </div>
-    <div class="input-group" style="margin-top: 16px;">
+    <div class="input-group" style="margin-top: 8px;">
       <div class="input-label">還款年期</div>
       <div class="select-wrapper">
         <select class="select-input" id="years">
@@ -727,11 +500,7 @@
           <option value="25">25 年</option>
           <option value="30" selected>30 年</option>
         </select>
-        <span class="select-arrow">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </span>
+        <span class="select-arrow">▼</span>
       </div>
     </div>
   </div>
@@ -759,11 +528,7 @@
             <option value="5">5 年</option>
             <option value="0">自住</option>
           </select>
-          <span class="select-arrow">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </span>
+          <span class="select-arrow">▼</span>
         </div>
       </div>
     </div>
@@ -786,7 +551,7 @@
         </div>
       </div>
     </div>
-    <div class="input-group" style="margin-top: 16px;">
+    <div class="input-group" style="margin-top: 8px;">
       <div class="input-label">月管理費 (HK$)</div>
       <div class="number-input-wrapper">
         <button class="number-btn minus" onclick="adjustValue('mgmt', -100)">−</button>
@@ -806,14 +571,14 @@
       </div>
       <div class="expense-item">
         <div class="expense-label">律師費</div>
-        <div class="number-input-wrapper" style="margin-top: 6px;">
-          <input type="number" class="number-input" id="lawyerFee" value="10000" inputmode="decimal" style="font-size: 12px;">
+        <div class="number-input-wrapper">
+          <input type="number" class="number-input" id="lawyerFee" value="10000" inputmode="decimal">
         </div>
       </div>
       <div class="expense-item">
         <div class="expense-label">經紀費</div>
-        <div class="number-input-wrapper" style="margin-top: 6px;">
-          <input type="number" class="number-input" id="agentFee" value="0" inputmode="decimal" placeholder="auto" style="font-size: 12px;">
+        <div class="number-input-wrapper">
+          <input type="number" class="number-input" id="agentFee" value="0" inputmode="decimal" placeholder="auto">
         </div>
       </div>
     </div>
@@ -836,31 +601,22 @@ let showChart = false;
 
 function toggleChart() {
   showChart = !showChart;
-  const section = document.getElementById('chartSection');
-  const btn = document.getElementById('chartToggle');
-  section.classList.toggle('visible', showChart);
-  btn.classList.toggle('active', showChart);
-  if (showChart) {
-    initChart();
-    updateChart();
-  }
+  document.getElementById('chartSection').classList.toggle('visible', showChart);
+  if (showChart) { initChart(); updateChart(); }
 }
 
 function syncDownFromSlider() {
   let price = parseFloat(document.getElementById('price').value) || 0;
   let ratio = parseFloat(document.getElementById('downRatio').value) || 20;
-  let down = price * (ratio / 100);
-  document.getElementById('down').value = Math.round(down);
-  updateChart();
-  calc();
+  document.getElementById('down').value = Math.round(price * (ratio / 100));
+  updateChart(); calc();
 }
 
 function syncDownFromInput() {
   let price = parseFloat(document.getElementById('price').value) || 0;
   let down = parseFloat(document.getElementById('down').value) || 0;
   if (price > 0) {
-    let ratio = (down / price) * 100;
-    ratio = Math.max(10, Math.min(90, ratio));
+    let ratio = Math.max(10, Math.min(90, (down / price) * 100));
     document.getElementById('downRatio').value = ratio.toFixed(0);
     document.getElementById('ratioDisplay').textContent = ratio.toFixed(0);
     document.getElementById('loanDisplay').textContent = (100 - ratio).toFixed(0);
@@ -881,36 +637,21 @@ function adjustRate(delta) {
 
 function adjustValue(id, delta) {
   const input = document.getElementById(id);
-  let value = parseFloat(input.value) || 0;
-  value = Math.max(0, value + delta);
+  let value = Math.max(0, (parseFloat(input.value) || 0) + delta);
   input.value = value;
-  if (id === 'down') {
-    syncDownFromInput();
-  } else {
-    if (showChart) updateChart();
-    calc();
-  }
+  if (id === 'down') syncDownFromInput();
+  else { if (showChart) updateChart(); calc(); }
 }
 
 function updateLeaseType() {
-  let leaseYears = document.getElementById('leaseYears').value;
-  let rentInput = document.getElementById('rent');
-  let isSelfLive = (leaseYears === '0');
-
-  if (isSelfLive) {
-    rentInput.value = 0;
-    rentInput.disabled = true;
-    rentInput.style.opacity = '0.5';
-  } else {
-    rentInput.disabled = false;
-    rentInput.style.opacity = '1';
-  }
+  let isSelfLive = document.getElementById('leaseYears').value === '0';
+  const rentInput = document.getElementById('rent');
+  rentInput.value = isSelfLive ? 0 : rentInput.value;
+  rentInput.disabled = isSelfLive;
   calc();
 }
 
-function formatMoney(num) {
-  return '$' + Math.round(num).toLocaleString();
-}
+function formatMoney(num) { return '$' + Math.round(num).toLocaleString(); }
 
 function calc() {
   let price = parseFloat(document.getElementById('price').value) || 0;
@@ -941,12 +682,9 @@ function calc() {
   document.getElementById('buyStampDuty').textContent = formatMoney(Math.round(buyStampDuty));
 
   let totalOneTime = buyStampDuty + lawyerFee + agentFee;
-
   let r = parseFloat(document.getElementById('rate').value)/100/12 || 0;
   let n = parseFloat(document.getElementById('years').value)*12 || 0;
   let pmt = (r === 0 || n === 0) ? 0 : loan * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1);
-  let monthlyMort = pmt;
-  let annualMort = pmt * 12;
 
   let monthlyRent = parseFloat(document.getElementById('rent').value) || 0;
   let annualRent = monthlyRent * 12;
@@ -954,16 +692,13 @@ function calc() {
   let isSelfOccupied = leaseYears === 0;
 
   let stampDutyRate = isSelfOccupied ? 0 : (leaseYears <= 1 ? 0.0025 : (leaseYears <= 3 ? 0.005 : 0.01));
-  let totalRent = annualRent * leaseYears;
-  let stampDuty = isSelfOccupied ? 0 : (totalRent * stampDutyRate);
+  let stampDuty = isSelfOccupied ? 0 : (annualRent * leaseYears * stampDutyRate);
 
   let inputRates = parseFloat(document.getElementById('rates').value) || 0;
   let annualRates = inputRates > 0 ? inputRates : annualRent * 0.05;
-  let monthlyRates = annualRates / 12;
 
   let inputGov = parseFloat(document.getElementById('govrent').value) || 0;
   let annualGovRent = inputGov > 0 ? inputGov : annualRent * 0.03;
-  let monthlyGovRent = annualGovRent / 12;
 
   let monthlyMgmt = parseFloat(document.getElementById('mgmt').value) || 0;
   let annualMgmt = monthlyMgmt * 12;
@@ -971,9 +706,8 @@ function calc() {
   let assessable = annualRent - annualRates;
   let nav = assessable * 0.8;
   let tax = isSelfOccupied ? 0 : Math.max(nav * 0.15, 0);
-  let monthlyTax = tax / 12;
 
-  let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - annualMort;
+  let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - (pmt * 12);
   let netMonthlyCash = netAnnualCash / 12;
 
   let paybackMonths = netMonthlyCash > 0 ? Math.ceil(totalOneTime / netMonthlyCash) : 999;
@@ -986,8 +720,7 @@ function calc() {
   let isAutoG = inputGov <= 0 ? "（自動）" : "";
 
   let cashClass = netAnnualCash >= 0 ? 'positive' : 'negative';
-  let cashBadgeClass = netAnnualCash >= 0 ? 'positive' : 'negative';
-  let paybackClass = paybackMonths < 120 ? 'good' : 'bad';
+  let paybackClass = paybackMonths < 120 ? 'bad' : 'bad';
 
   document.getElementById('result').innerHTML = `
     <div class="result-card">
@@ -995,7 +728,6 @@ function calc() {
         <div class="result-title">年淨現金流</div>
         <div class="result-main ${cashClass}">${formatMoney(Math.round(netAnnualCash))}</div>
       </div>
-
       <div class="result-grid">
         <div class="result-item">
           <div class="result-item-label">月淨現金流</div>
@@ -1006,131 +738,61 @@ function calc() {
           <div class="result-item-value">${grossYield}%</div>
         </div>
       </div>
-
-      <div style="text-align: center;">
-        <div class="cash-return-badge ${cashBadgeClass}">
-          現金回報率：${cashReturn}%
-        </div>
+      <div style="text-align:center">
+        <div class="cash-return-badge ${cashClass}">現金回報率：${cashReturn}%</div>
       </div>
-
       <div class="payback-box">
         <div class="payback-label">回本期</div>
-        <div class="payback-value ${paybackClass}">
-          ${paybackMonths < 999 ? paybackMonths + ' 個月' : '無法回本'}
-        </div>
+        <div class="payback-value ${paybackClass}">${paybackMonths < 999 ? paybackMonths + ' 個月' : '無法回本'}</div>
         <div class="payback-sub">(${paybackYears} 年)</div>
       </div>
     </div>
 
     <div class="detail-section">
       <div class="detail-title">樓價資料</div>
-      <div class="detail-row">
-        <span class="detail-label">樓價</span>
-        <span class="detail-value">${formatMoney(price)}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">首期</span>
-        <span class="detail-value">${formatMoney(down)}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">按揭金額</span>
-        <span class="detail-value">${formatMoney(loan)}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">月供款</span>
-        <span class="detail-value">${formatMoney(Math.round(monthlyMort))}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">年供款</span>
-        <span class="detail-value">${formatMoney(Math.round(annualMort))}</span>
-      </div>
+      <div class="detail-row"><span class="detail-label">樓價</span><span class="detail-value">${formatMoney(price)}</span></div>
+      <div class="detail-row"><span class="detail-label">首期</span><span class="detail-value">${formatMoney(down)}</span></div>
+      <div class="detail-row"><span class="detail-label">按揭金額</span><span class="detail-value">${formatMoney(loan)}</span></div>
+      <div class="detail-row"><span class="detail-label">月供款</span><span class="detail-value">${formatMoney(Math.round(pmt))}</span></div>
+      <div class="detail-row"><span class="detail-label">年供款</span><span class="detail-value">${formatMoney(Math.round(pmt * 12))}</span></div>
     </div>
 
     <div class="detail-section">
       <div class="detail-title">一次性支出</div>
-      <div class="detail-row">
-        <span class="detail-label">印花稅</span>
-        <span class="detail-value highlight">${formatMoney(Math.round(buyStampDuty))}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">律師費</span>
-        <span class="detail-value">${formatMoney(lawyerFee)}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">經紀費</span>
-        <span class="detail-value">${formatMoney(Math.round(agentFee))}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">租客釐印費</span>
-        <span class="detail-value">${formatMoney(Math.round(stampDuty))}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">總額</span>
-        <span class="detail-value highlight">${formatMoney(Math.round(totalOneTime + stampDuty))}</span>
-      </div>
+      <div class="detail-row"><span class="detail-label">印花稅</span><span class="detail-value highlight">${formatMoney(Math.round(buyStampDuty))}</span></div>
+      <div class="detail-row"><span class="detail-label">律師費</span><span class="detail-value">${formatMoney(lawyerFee)}</span></div>
+      <div class="detail-row"><span class="detail-label">經紀費</span><span class="detail-value">${formatMoney(Math.round(agentFee))}</span></div>
+      <div class="detail-row"><span class="detail-label">租客釐印費</span><span class="detail-value">${formatMoney(Math.round(stampDuty))}</span></div>
+      <div class="detail-row"><span class="detail-label">總額</span><span class="detail-value highlight">${formatMoney(Math.round(totalOneTime + stampDuty))}</span></div>
     </div>
 
     <div class="detail-section">
       <div class="detail-title">租金收入</div>
-      <div class="detail-row">
-        <span class="detail-label">月租金</span>
-        <span class="detail-value green">${formatMoney(monthlyRent)}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">年租金</span>
-        <span class="detail-value green">${formatMoney(annualRent)}</span>
-      </div>
+      <div class="detail-row"><span class="detail-label">月租金</span><span class="detail-value green">${formatMoney(monthlyRent)}</span></div>
+      <div class="detail-row"><span class="detail-label">年租金</span><span class="detail-value green">${formatMoney(annualRent)}</span></div>
     </div>
 
     <div class="detail-section">
       <div class="detail-title">稅務計算</div>
-      <div class="detail-row">
-        <span class="detail-label">年物业税</span>
-        <span class="detail-value red">${formatMoney(Math.round(tax))}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">月物业税</span>
-        <span class="detail-value red">${formatMoney(Math.round(monthlyTax))}</span>
-      </div>
+      <div class="detail-row"><span class="detail-label">年物业税</span><span class="detail-value red">${formatMoney(Math.round(tax))}</span></div>
+      <div class="detail-row"><span class="detail-label">月物业税</span><span class="detail-value red">${formatMoney(Math.round(tax / 12))}</span></div>
     </div>
 
     <div class="detail-section">
       <div class="detail-title">支出</div>
-      <div class="detail-row">
-        <span class="detail-label">年地租 ${isAutoG}</span>
-        <span class="detail-value">${formatMoney(Math.round(annualGovRent))}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">月地租</span>
-        <span class="detail-value">${formatMoney(Math.round(monthlyGovRent))}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">年差餉 ${isAutoR}</span>
-        <span class="detail-value">${formatMoney(Math.round(annualRates))}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">月差餉</span>
-        <span class="detail-value">${formatMoney(Math.round(monthlyRates))}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">年管理費</span>
-        <span class="detail-value">${formatMoney(Math.round(annualMgmt))}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">月管理費</span>
-        <span class="detail-value">${formatMoney(Math.round(monthlyMgmt))}</span>
-      </div>
+      <div class="detail-row"><span class="detail-label">年地租 ${isAutoG}</span><span class="detail-value">${formatMoney(Math.round(annualGovRent))}</span></div>
+      <div class="detail-row"><span class="detail-label">月地租</span><span class="detail-value">${formatMoney(Math.round(annualGovRent / 12))}</span></div>
+      <div class="detail-row"><span class="detail-label">年差餉 ${isAutoR}</span><span class="detail-value">${formatMoney(Math.round(annualRates))}</span></div>
+      <div class="detail-row"><span class="detail-label">月差餉</span><span class="detail-value">${formatMoney(Math.round(annualRates / 12))}</span></div>
+      <div class="detail-row"><span class="detail-label">年管理費</span><span class="detail-value">${formatMoney(Math.round(annualMgmt))}</span></div>
+      <div class="detail-row"><span class="detail-label">月管理費</span><span class="detail-value">${formatMoney(Math.round(monthlyMgmt))}</span></div>
     </div>
   `;
 }
 
 function initChart() {
   const ctx = document.getElementById('analysisChart').getContext('2d');
-
-  if (chartInstance) {
-    chartInstance.destroy();
-  }
-
+  if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(ctx, {
     type: 'line',
     data: {
@@ -1140,23 +802,15 @@ function initChart() {
         data: [],
         borderColor: '#c9a962',
         backgroundColor: 'rgba(201, 169, 98, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3,
-        pointBackgroundColor: '#c9a962',
-        pointBorderColor: '#0a0a0b',
-        pointBorderWidth: 2
+        fill: true, tension: 0.4,
+        pointRadius: 2, pointBackgroundColor: '#c9a962'
       }, {
         label: '月淨現金流',
         data: [],
         borderColor: '#4ade80',
         backgroundColor: 'rgba(74, 222, 128, 0.05)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3,
-        pointBackgroundColor: '#4ade80',
-        pointBorderColor: '#0a0a0b',
-        pointBorderWidth: 2,
+        fill: true, tension: 0.4,
+        pointRadius: 2, pointBackgroundColor: '#4ade80',
         yAxisID: 'y1'
       }]
     },
@@ -1164,37 +818,13 @@ function initChart() {
       responsive: true,
       interaction: { mode: 'index', intersect: false },
       scales: {
-        x: {
-          grid: { color: 'rgba(255,255,255,0.05)' },
-          ticks: { color: '#5a5a5e', font: { family: 'Outfit' } }
-        },
-        y: {
-          grid: { color: 'rgba(255,255,255,0.05)' },
-          ticks: { color: '#5a5a5e', font: { family: 'Outfit' } },
-          beginAtZero: true,
-          title: { display: true, text: '回報率 (%)', color: '#5a5a5e' }
-        },
-        y1: {
-          grid: { drawOnChartArea: false },
-          ticks: { color: '#5a5a5e', font: { family: 'Outfit' } },
-          beginAtZero: true,
-          position: 'right',
-          title: { display: true, text: '月現金流', color: '#5a5a5e' }
-        }
+        x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#5a5a5e', font: { family: 'Outfit', size: 9 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#5a5a5e', font: { family: 'Outfit', size: 9 } }, beginAtZero: true },
+        y1: { grid: { drawOnChartArea: false }, ticks: { color: '#5a5a5e', font: { family: 'Outfit', size: 9 } }, beginAtZero: true, position: 'right' }
       },
       plugins: {
-        legend: {
-          labels: { color: '#9a9a9e', font: { family: 'Outfit' }, usePointStyle: true, pointStyle: 'circle' }
-        },
-        tooltip: {
-          backgroundColor: '#16161a',
-          titleColor: '#f5f5f3',
-          bodyColor: '#9a9a9e',
-          borderColor: '#2a2a30',
-          borderWidth: 1,
-          padding: 12,
-          cornerRadius: 8
-        }
+        legend: { labels: { color: '#9a9a9e', font: { family: 'Outfit', size: 9 }, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: { backgroundColor: '#16161a', titleColor: '#f5f5f3', bodyColor: '#9a9a9e', borderColor: '#2a2a30', borderWidth: 1, padding: 8, cornerRadius: 6 }
       }
     }
   });
@@ -1203,56 +833,28 @@ function initChart() {
 function updateChart() {
   let price = parseFloat(document.getElementById('price').value) || 0;
   let currentRatio = parseFloat(document.getElementById('downRatio').value) || 20;
-
   document.getElementById('ratioDisplay').textContent = currentRatio;
   document.getElementById('loanDisplay').textContent = 100 - currentRatio;
-
-  let currentDown = price * (currentRatio / 100);
-
   document.getElementById('chartPrice').textContent = formatMoney(price);
-  document.getElementById('chartDown').textContent = formatMoney(currentDown);
+  document.getElementById('chartDown').textContent = formatMoney(price * (currentRatio / 100));
 
-  let ratios = [];
-  let returns = [];
-  let cashflows = [];
-  let maxReturn = -999999;
-  let optimalRatio = 20;
-  let optimalReturn = 0;
+  let ratios = [], returns = [], cashflows = [], maxReturn = -999999, optimalRatio = 20, optimalReturn = 0;
 
   for (let r = 10; r <= 90; r += 5) {
     ratios.push(r + '%');
-
     let down = price * (r / 100);
     let loan = price - down;
-
     let rate = parseFloat(document.getElementById('rate').value)/100/12 || 0;
     let n = parseFloat(document.getElementById('years').value)*12 || 0;
     let pmt = (rate === 0 || n === 0) ? 0 : loan * rate * Math.pow(1+rate,n) / (Math.pow(1+rate,n)-1);
-
     let monthlyRent = parseFloat(document.getElementById('rent').value) || 0;
     let annualRent = monthlyRent * 12;
-    let annualRates = annualRent * 0.05;
-    let annualGovRent = annualRent * 0.03;
-    let monthlyMgmt = parseFloat(document.getElementById('mgmt').value) || 0;
-    let annualMgmt = monthlyMgmt * 12;
-    let assessable = annualRent - annualRates;
-    let nav = assessable * 0.8;
-    let leaseYears = parseFloat(document.getElementById('leaseYears').value) ?? 1;
-    let isSelfOccupied = leaseYears === 0;
-    let tax = isSelfOccupied ? 0 : Math.max(nav * 0.15, 0);
-
-    let netAnnualCash = annualRent - annualRates - annualGovRent - annualMgmt - tax - (pmt * 12);
-    let netMonthlyCash = netAnnualCash / 12;
+    let tax = parseFloat(document.getElementById('leaseYears').value) == 0 ? 0 : Math.max((annualRent - annualRent * 0.05) * 0.8 * 0.15, 0);
+    let netAnnualCash = annualRent - annualRent * 0.05 - annualRent * 0.03 - (parseFloat(document.getElementById('mgmt').value) || 0) * 12 - tax - (pmt * 12);
     let cashReturn = down > 0 ? (netAnnualCash / down * 100) : 0;
-
     returns.push(cashReturn);
-    cashflows.push(netMonthlyCash);
-
-    if (cashReturn > maxReturn) {
-      maxReturn = cashReturn;
-      optimalRatio = r;
-      optimalReturn = cashReturn;
-    }
+    cashflows.push(netAnnualCash / 12);
+    if (cashReturn > maxReturn) { maxReturn = cashReturn; optimalRatio = r; optimalReturn = cashReturn; }
   }
 
   if (chartInstance) {
@@ -1261,26 +863,16 @@ function updateChart() {
     chartInstance.data.datasets[1].data = cashflows;
     chartInstance.update();
   }
-
   document.getElementById('optimalDown').textContent = optimalRatio;
   document.getElementById('optimalReturn').textContent = optimalReturn.toFixed(2);
 }
 
-// Auto-calculate on load
 window.addEventListener('DOMContentLoaded', calc);
-
-// Auto-calculate on input change
 document.querySelectorAll('input').forEach(input => {
-  input.addEventListener('input', function() {
-    calc();
-    if (showChart && this.id !== 'down') updateChart();
-  });
+  input.addEventListener('input', function() { calc(); if (showChart && this.id !== 'down') updateChart(); });
 });
 document.querySelectorAll('select').forEach(select => {
-  select.addEventListener('change', function() {
-    calc();
-    if (showChart) updateChart();
-  });
+  select.addEventListener('change', function() { calc(); if (showChart) updateChart(); });
 });
 </script>
 </body>
