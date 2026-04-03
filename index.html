@@ -32,13 +32,20 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html {
+    height: 100%;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
   body {
     font-family: 'Outfit', sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
-    min-height: 100vh;
+    min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    padding-bottom: env(safe-area-inset-bottom, 24px);
   }
 
   /* Noise texture overlay */
@@ -459,8 +466,9 @@
   .expense-item {
     background: var(--bg-primary);
     border-radius: 10px;
-    padding: 12px 8px;
+    padding: 12px 6px;
     text-align: center;
+    overflow: hidden;
   }
   .expense-label {
     font-size: 11px;
@@ -471,6 +479,14 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     color: var(--gold);
+    word-break: break-all;
+  }
+  .expense-item .number-input-wrapper {
+    margin-top: 4px;
+  }
+  .expense-item .number-input {
+    font-size: 11px;
+    padding: 6px 2px;
   }
 
   /* Chart Section */
@@ -576,15 +592,35 @@
 
   /* Mobile adjustments */
   @media (max-width: 480px) {
-    .container { padding: 0 12px 32px; }
-    .header { padding: 24px 0 20px; }
-    .logo { font-size: 24px; }
-    .card { padding: 16px; border-radius: 12px; }
-    .result-main { font-size: 32px; }
-    .number-btn { width: 44px; }
-    .number-input { font-size: 16px; padding: 12px 6px; }
-    .expense-grid { gap: 8px; }
-    .expense-item { padding: 10px 6px; }
+    html, body { height: auto; min-height: 100dvh; }
+    .container { padding: 0 12px calc(32px + env(safe-area-inset-bottom, 0px)); }
+    .header { padding: 20px 0 16px; }
+    .logo { font-size: 22px; }
+    .subtitle { font-size: 11px; }
+    .card { padding: 14px; border-radius: 12px; margin-bottom: 12px; }
+    .section-title { margin-bottom: 12px; font-size: 10px; }
+    .input-label { font-size: 12px; margin-bottom: 8px; }
+    .number-btn { width: 40px; font-size: 18px; }
+    .number-input { font-size: 15px; padding: 10px 4px; }
+    .select-input { font-size: 14px; padding: 12px 36px 12px 12px; }
+    .result-main { font-size: 28px; }
+    .result-title { font-size: 11px; }
+    .payback-value { font-size: 24px; }
+    .detail-section { padding: 14px; margin-bottom: 12px; }
+    .detail-title { font-size: 12px; margin-bottom: 12px; }
+    .detail-row { padding: 8px 0; }
+    .detail-label, .detail-value { font-size: 12px; }
+    .expense-grid { gap: 6px; }
+    .expense-item { padding: 8px 4px; }
+    .expense-label { font-size: 10px; }
+    .expense-value { font-size: 11px; }
+    .calc-btn { padding: 16px; margin: 20px 0; font-size: 14px; }
+    .toggle-chart-btn { padding: 12px 16px; font-size: 13px; margin: 16px 0; }
+    .result-card { padding: 16px; margin-bottom: 12px; }
+    .result-grid { gap: 8px; }
+    .result-item { padding: 10px; }
+    .cash-return-badge { font-size: 12px; padding: 8px 12px; }
+    .chart-container { padding: 14px; }
   }
 
   /* Hide elements */
