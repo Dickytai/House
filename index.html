@@ -127,6 +127,12 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .number-btn span {
+    display: block;
+    line-height: 1;
   }
   .number-btn:hover { color: var(--gold); background: var(--bg-card-hover); }
   .number-btn.minus { border-right: 1px solid var(--border); }
@@ -404,6 +410,20 @@
   .chart-price-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gold); }
 
   .hidden { display: none !important; }
+
+  /* Extra small screens - shrink buttons */
+  @media (max-width: 360px) {
+    .number-btn { width: 28px; font-size: 14px; }
+    .number-input { font-size: 13px; padding: 8px 2px; }
+    .grid-2 { gap: 6px; }
+    .card { padding: 10px; margin-bottom: 8px; }
+    .logo { font-size: 16px; }
+  }
+
+  /* Ensure no horizontal overflow */
+  * { word-wrap: break-word; overflow-wrap: break-word; }
+  .number-input-wrapper { max-width: 100%; }
+  .input-group { min-width: 0; }
 </style>
 </head>
 <body>
@@ -462,9 +482,9 @@
     <div class="input-group">
       <div class="input-label">樓價 (HK$)</div>
       <div class="number-input-wrapper">
-        <button class="number-btn minus" onclick="adjustValue('price', -100000)">−</button>
+        <button class="number-btn minus" onclick="adjustValue('price', -100000)"><span>−</span></button>
         <input type="number" class="number-input" id="price" value="5000000" inputmode="decimal" oninput="syncDownFromInput()">
-        <button class="number-btn plus" onclick="adjustValue('price', 100000)">+</button>
+        <button class="number-btn plus" onclick="adjustValue('price', 100000)"><span>+</span></button>
       </div>
     </div>
   </div>
@@ -476,17 +496,17 @@
       <div class="input-group">
         <div class="input-label">首期 (HK$)</div>
         <div class="number-input-wrapper">
-          <button class="number-btn minus" onclick="adjustValue('down', -100000)">−</button>
+          <button class="number-btn minus" onclick="adjustValue('down', -100000)"><span>−</span></button>
           <input type="number" class="number-input" id="down" value="1000000" inputmode="decimal" oninput="syncDownFromInput()">
-          <button class="number-btn plus" onclick="adjustValue('down', 100000)">+</button>
+          <button class="number-btn plus" onclick="adjustValue('down', 100000)"><span>+</span></button>
         </div>
       </div>
       <div class="input-group">
         <div class="input-label">按揭利率 (%)</div>
         <div class="number-input-wrapper">
-          <button class="number-btn minus" onclick="adjustRate(-0.25)">−</button>
+          <button class="number-btn minus" onclick="adjustRate(-0.25)"><span>−</span></button>
           <input type="number" class="number-input" id="rate" value="3" step="0.01" inputmode="decimal">
-          <button class="number-btn plus" onclick="adjustRate(0.25)">+</button>
+          <button class="number-btn plus" onclick="adjustRate(0.25)"><span>+</span></button>
         </div>
       </div>
     </div>
@@ -512,9 +532,9 @@
       <div class="input-group">
         <div class="input-label">每月租金 (HK$)</div>
         <div class="number-input-wrapper">
-          <button class="number-btn minus" onclick="adjustValue('rent', -500)">−</button>
+          <button class="number-btn minus" onclick="adjustValue('rent', -500)"><span>−</span></button>
           <input type="number" class="number-input" id="rent" value="18000" inputmode="decimal">
-          <button class="number-btn plus" onclick="adjustValue('rent', 500)">+</button>
+          <button class="number-btn plus" onclick="adjustValue('rent', 500)"><span>+</span></button>
         </div>
       </div>
       <div class="input-group">
@@ -554,9 +574,9 @@
     <div class="input-group" style="margin-top: 8px;">
       <div class="input-label">月管理費 (HK$)</div>
       <div class="number-input-wrapper">
-        <button class="number-btn minus" onclick="adjustValue('mgmt', -100)">−</button>
+        <button class="number-btn minus" onclick="adjustValue('mgmt', -100)"><span>−</span></button>
         <input type="number" class="number-input" id="mgmt" value="1500" inputmode="decimal">
-        <button class="number-btn plus" onclick="adjustValue('mgmt', 100)">+</button>
+        <button class="number-btn plus" onclick="adjustValue('mgmt', 100)"><span>+</span></button>
       </div>
     </div>
   </div>
